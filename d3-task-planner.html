@@ -90,6 +90,23 @@ A chart that shows tasks as draggable dots
 							'http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'
 						}
 					},
+					end: {
+						type: String,
+						value: '2018-02-08',
+					},
+					start: {
+						type: String,
+						value: '2018-01-01',
+					},
+
+					/**
+					* Component width
+					*/
+					width: Number,
+					/**
+					* Component height
+					*/
+					height: Number,
 					margin: {
 						type: Object,
 						value: {
@@ -98,14 +115,6 @@ A chart that shows tasks as draggable dots
 							bottom: 30,
 							left: 50
 						}
-					},
-					end: {
-						type: String,
-						value: '2018-02-08',
-					},
-					start: {
-						type: String,
-						value: '2018-01-01',
 					},
 					// Functions to calculate ranges
 					x: {
@@ -116,14 +125,12 @@ A chart that shows tasks as draggable dots
 						type: Number,
 						computed: '_computeYrange()'
 					},
-					// Component's dimensions
-					width: Number,
-					height: Number,
-					graphWidth: {
+					// Graph dimensions
+					_graphWidth: {
 						type: Number,
 						computed: '_computeGraphWidth()'
 					},
-					graphHeight: {
+					_graphHeight: {
 						type: Number,
 						computed: '_computeGraphHeight()'
 					},
@@ -158,24 +165,24 @@ A chart that shows tasks as draggable dots
 					.range([ this.height - this.margin.top - this.margin.bottom, 0]);
 			}
 
-			computeXAxis() {
+			_drawXAxis() {
 				const xAxis = d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b'));
 				d3.select(this.$.xAxis)
 					.attr('class', 'x axis')
 					// By default x axis is on the upperside
 					// so we need to move it down by the graph height
-					.attr('transform', 'translate(0,' + this.graphHeight + ')')
+					.attr('transform', 'translate(0,' + this._graphHeight + ')')
 					.call(xAxis);
 			}
 
-			computeYAxis() {
+			_drawYAxis() {
 				const yAxis = d3.axisLeft(this.y);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
 			}
 
-			drawValuelinePath(inputData) {
+			_drawValuelinePath(inputData) {
 				const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.close));
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
@@ -194,7 +201,7 @@ A chart that shows tasks as draggable dots
 				});
 			}
 
-			computeTodayLine() {
+			_drawTodayLine() {
 				// Add vertical line on today's date
 				// const todayDate = new Date();
 				// XXX: debug with fixed data
@@ -203,7 +210,7 @@ A chart that shows tasks as draggable dots
 					.attr('x1', this.x(todayDate))
 					.attr('y1', 0)
 					.attr('x2', this.x(todayDate))
-					.attr('y2', this.graphHeight);
+					.attr('y2', this._graphHeight);
 			}
 
 			addTooltip(d) {
@@ -223,7 +230,7 @@ A chart that shows tasks as draggable dots
 				d3.select(this.$.svg).selectAll('.tooltip').remove();
 			}
 
-			drawScatterPlot(inputData) {
+			_drawScatterPlot(inputData) {
 				const dragged = (d) => {
 					const todayDate = new Date('2018-01-21T23:00:00.000Z');
 					// Allow post-poning deadlines only after today
@@ -271,7 +278,7 @@ A chart that shows tasks as draggable dots
 					.call(d3.drag().on('drag', dragged));
 			}
 
-			drawLabels(inputData) {
+			_drawLabels(inputData) {
 				d3.select(this.$.svg).select('g').selectAll('dot')
 					.data(inputData)
 					.enter().append('text')
@@ -283,9 +290,9 @@ A chart that shows tasks as draggable dots
 
 			ready() {
 				super.ready();
-				this.computeTodayLine();
-				this.computeYAxis();
-				this.computeXAxis();
+				this._drawTodayLine();
+				this._drawYAxis();
+				this._drawXAxis();
 
 				// Define data to build the graphics
 				let inputData = this.buildInputData();
@@ -300,11 +307,11 @@ A chart that shows tasks as draggable dots
 					d.close = +(d.progress * 100);
 				});
 
-				this.drawScatterPlot(inputData);
+				this._drawScatterPlot(inputData);
 
-				this.drawLabels(inputData);
+				this._drawLabels(inputData);
 
-				this.drawValuelinePath(inputData);
+				this._drawValuelinePath(inputData);
 			}
 		}
 		customElements.define(D3TaskPlanner.is, D3TaskPlanner);
