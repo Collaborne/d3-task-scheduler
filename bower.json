@@ -1,0 +1,28 @@
+{
+  "name": "d3-task-planner",
+  "authors": [
+    "collaborne"
+  ],
+  "description": "Web component providing a D3 based task planner",
+  "main": "d3-task-planner.html",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "d3",
+    "chart",
+    "scheduler",
+    "task-planner"
+  ],
+  "license": "Apache 2",
+  "ignore": [
+    "**/.*"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0"
+  },
+  "devDependencies": {
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
+    "web-component-tester": "*",
+    "iron-component-page": "^3.0.1"
+  }
+}
