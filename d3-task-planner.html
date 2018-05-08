@@ -183,10 +183,9 @@ A chart that shows tasks as draggable dots
 			}
 
 			_drawValuelinePath(inputData) {
-				const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage));
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
-					.attr('d', valueline(inputData));
+					.attr('d', this._valueline(inputData));
 			}
 
 			buildInputData() {
@@ -237,6 +236,10 @@ A chart that shows tasks as draggable dots
 				d3.select(this.$.svg).selectAll('.tooltip').remove();
 			}
 
+			_valueline(data) {
+				return d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage))(data);
+			}
+
 			_drawScatterPlot(inputData) {
 				const dragged = d => {
 					// TODO: this is just for debug
@@ -261,8 +264,7 @@ A chart that shows tasks as draggable dots
 						});
 
 						// Redraw line connecting dots
-						const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage));
-						d3.select(this.$.svg).select('path').attr('d', valueline(newInputData));
+						d3.select(this.$.svg).select('path').attr('d', this._valueline(newInputData));
 					}
 				};
 
