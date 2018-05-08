@@ -5,6 +5,12 @@
 <!--
 A chart that shows tasks as draggable dots
 
+### Example
+
+```html
+<d3-task-planner width="600" height="300"></d3-progress-meter>
+```
+
 @demo demo/index.html
 -->
 <dom-module id='d3-task-planner'>
@@ -31,7 +37,31 @@ A chart that shows tasks as draggable dots
 				position: absolute;
 				text-align: center;
 			}
+
+			#today {
+				stroke-width: 2;
+				stroke: grey;
+			}
+
+			#valueLine {
+				fill: none;
+				stroke: black;
+			}
+
+			.label {
+				margin-bottom: 16px;
+			}
+
 		</style>
+
+		<svg id="svg" width$="[[width]]" height$="[[height]]">
+			<g transform$="[[_transform]]">
+				<line id="today"></line>
+				<path id="valueLine"></path>
+				<g id="xAxis"></g>
+				<g id="yAxis"></g>
+			</g>
+		</svg>
 	</template>
 
 	<script>
@@ -51,220 +81,230 @@ A chart that shows tasks as draggable dots
 
 			static get properties() {
 				return {
-					_schedule: {
+					deadlines: {
 						type: Object,
 						value: {
-							'deadlines': {
-								'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16',
-								'http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24',
-								'http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31',
-								'http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'
-							},
-							'end': '2018-02-08',
-							'nrNormDays': 14,
-							'nrRealDays': 28,
-							'start': '2018-01-01',
-							'timeAllocation': 0.5
+							'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16',
+							'http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24',
+							'http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31',
+							'http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'
 						}
+					},
+					margin: {
+						type: Object,
+						value: {
+							top: 30,
+							right: 50,
+							bottom: 30,
+							left: 50
+						}
+					},
+					end: {
+						type: String,
+						value: '2018-02-08',
+					},
+					start: {
+						type: String,
+						value: '2018-01-01',
+					},
+					// Functions to calculate ranges
+					x: {
+						type: Number,
+						computed: '_computeXrange()'
+					},
+					y: {
+						type: Number,
+						computed: '_computeYrange()'
+					},
+					// Component's dimensions
+					width: Number,
+					height: Number,
+					graphWidth: {
+						type: Number,
+						computed: '_computeGraphWidth()'
+					},
+					graphHeight: {
+						type: Number,
+						computed: '_computeGraphHeight()'
+					},
+					_transform: {
+						type: String,
+						computed: '_computeTransform()'
 					},
 				};
 			}
 
+			_computeTransform() {
+				return "translate(" + this.margin.left + ", " + this.margin.top + ")";
+			}
+
+			_computeGraphWidth() {
+				return this.width - this.margin.left - this.margin.right;
+			}
+
+			_computeGraphHeight() {
+				return this.height - this.margin.top - this.margin.bottom;
+			}
+
+			_computeXrange() {
+				return d3.scaleTime()
+					.domain([new Date(this.start), new Date(this.end)])
+					.range([0, this.width - this.margin.left - this.margin.right]);
+			}
+
+			_computeYrange() {
+				return d3.scaleLinear()
+					.domain([0, 100])
+					.range([ this.height - this.margin.top - this.margin.bottom, 0]);
+			}
+
+			computeXAxis() {
+				const xAxis = d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b'));
+				d3.select(this.$.xAxis)
+					.attr('class', 'x axis')
+					// By default x axis is on the upperside
+					// so we need to move it down by the graph height
+					.attr('transform', 'translate(0,' + this.graphHeight + ')')
+					.call(xAxis);
+			}
+
+			computeYAxis() {
+				const yAxis = d3.axisLeft(this.y);
+				d3.select(this.$.yAxis)
+					.attr('class', 'y axis')
+					.call(yAxis);
+			}
+
+			drawValuelinePath(inputData) {
+				const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.close));
+				d3.select(this.$.valueLine)
+					.attr('class', 'line')
+					.attr('d', valueline(inputData));
+			}
+
 			buildInputData() {
-				const projectTotalDuration = new Date(this._schedule.end).getTime() - new Date(this._schedule.start).getTime();
-				return Object.keys(this._schedule.deadlines).map(idPhase => {
-					const phaseDeadline = this._schedule.deadlines[idPhase];
+				const projectTotalDuration = new Date(this.end).getTime() - new Date(this.start).getTime();
+				return Object.keys(this.deadlines).map(idPhase => {
+					const phaseDeadline = this.deadlines[idPhase];
 					return {
 						name: idPhase,
 						date: phaseDeadline,
-						progress: (new Date(phaseDeadline).getTime() - new Date(this._schedule.start).getTime()) / projectTotalDuration
+						progress: (new Date(phaseDeadline).getTime() - new Date(this.start).getTime()) / projectTotalDuration
 					};
 				});
 			}
 
-			ready() {
-				super.ready();
-				const margin = {
-					top: 30,
-					right: 20,
-					bottom: 30,
-					left: 50
-				},
-				width = 600 - margin.left - margin.right,
-				height = 270 - margin.top - margin.bottom;
-
-				// Define data to build the graphics
-				let inputData = this.buildInputData();
-
-				const recalculateSchedule = (taskId, newDeadline) => {
-					const format = d3.timeFormat('%Y-%m-%d');
-					const oldDeadline = new Date(this._schedule.deadlines[taskId]);
-					this._schedule.deadlines[taskId] = format(new Date(newDeadline));
-					// Move also other deadlines
-					// that are after the current one
-					// TODO: simulates what task-scheduler library does
-					const blockedInterval = newDeadline.getTime() - oldDeadline.getTime();
-					Object.keys(this._schedule.deadlines).forEach(taskKey => {
-						const previousDeadline = new Date(this._schedule.deadlines[taskKey]);
-						if(new Date(previousDeadline) > new Date(oldDeadline)) {
-							this._schedule.deadlines[taskKey] = format(new Date(previousDeadline).getTime() + blockedInterval);
-						}
-					});
-					// Move also end
-					const oldEnd = this._schedule.end;
-					this._schedule.end = format(new Date(oldEnd).getTime() + blockedInterval);
-
-					return this.buildInputData();
-				};
-
-				// Set the ranges
-				const x = d3.scaleTime()
-					.domain([new Date(this._schedule.start), new Date(this._schedule.end)])
-					.range([0, width]);
-
-				const y = d3.scaleLinear()
-					.domain([0, 100])
-					.range([height, 0]);
-
-				// Define the axes
-				const xAxis = d3.axisBottom(x)
-					.tickFormat(d3.timeFormat('%b'));
-
-				const yAxis = d3.axisLeft(y);
-
-				const div = d3.select('body').append('div')
-					.attr('class', 'tooltip')
-					.style('opacity', 0);
-
-				// Adds the svg canvas
-				const svg = d3.select('body')
-					.append('svg')
-					.attr('width', width + margin.left + margin.right)
-					.attr('height', height + margin.top + margin.bottom)
-					.append('g')
-					.attr('transform',
-						'translate(' + margin.left + ',' + margin.top + ')');
-
-				// Parse the date / time
-				const parseDate = d3.timeParse('%Y-%m-%d');
-
-				inputData.forEach(d => {
-					d.date = parseDate(d.date);
-					d.close = +(d.progress * 100);
-				});
-
+			computeTodayLine() {
 				// Add vertical line on today's date
-				//const today = new Date();
-				// Debug
-				const today = new Date('2018-01-21T23:00:00.000Z');
-				svg.append('line')
-					.attr('x1', x(today))
+				// const todayDate = new Date();
+				// XXX: debug with fixed data
+				const todayDate = new Date('2018-01-21T23:00:00.000Z');
+				d3.select(this.$.today)
+					.attr('x1', this.x(todayDate))
 					.attr('y1', 0)
-					.attr('x2', x(today))
-					.attr('y2', height)
-					.style('stroke-width', 2)
-					.style('stroke', 'red');
+					.attr('x2', this.x(todayDate))
+					.attr('y2', this.graphHeight);
+			}
 
-				// Function to call when dots are dragged
-				function dragged(d) {
-					// Allow post-poning deadlines only after today
-					if (d.date >= today && d.date > today) {
-						d.date = x.invert(d3.event.x);
-						// Move the dots
-						d3.select(this)
-							.attr('cx', x(d.date));
-
-						recalculateSchedule(d.name, d.date);
-
-						// Redraw line connecting dots
-						svg.select('path').attr('d', valueline(inputData));
-					}
-				}
-
-				// Define the line connecting the dots
-				const valueline = d3.line().x(d => x(d.date)).y(d => y(d.close));
-
-				// Add the valueline path
-				svg.append('path')
-					.attr('class', 'line')
-					.style('stroke', 'black')
-					.attr('fill', 'none')
-					.attr('d', valueline(inputData));
-
-				const dragbehaviour = d3.drag().on('drag', dragged);
-
+			addTooltip(d) {
 				const buildTooltipText = d => {
 					const format = d3.timeFormat('%d-%m-%Y');
-					switch(d.name){
-						case 'http://collaborne.com/schema/1.0/tasks/sensing':
-							return `Sensing: ${format(new Date(d.date))}`;
-						case 'http://collaborne.com/schema/1.0/tasks/visioning':
-							return `Visioning: ${format(new Date(d.date))}`;
-						case 'http://collaborne.com/schema/1.0/tasks/prototyping':
-							return `Prototyping: ${format(new Date(d.date))}`;
-						case 'http://collaborne.com/schema/1.0/tasks/scaling':
-							return `Scaling: ${format(new Date(d.date))}`;
-						default:
-							return '';
-					}
-				}
+					return `${d.name}: ${format(new Date(d.date))}`;
+				};
+				d3.select(this.$.svg).append('text')
+					.attr('class', 'tooltip')
+					.text(buildTooltipText(d))
+					.attr('x', this.x(d.date))
+					// Position tooltip under the dot so that it's readable
+					.attr('y', this.y(d.close) + 72);
+			}
 
-				// Add the scatterplot
-				svg.selectAll('dot')
+			removeTooltip() {
+				d3.select(this.$.svg).selectAll('.tooltip').remove();
+			}
+
+			drawScatterPlot(inputData) {
+				const dragged = (d) => {
+					const todayDate = new Date('2018-01-21T23:00:00.000Z');
+					// Allow post-poning deadlines only after today
+					if (d.date >= todayDate && d.date > todayDate) {
+						d.date = this.x.invert(d3.event.x);
+						// Move the dots
+						d3.select(this.$.svg)
+							.select(`.${d.name}`)
+							.attr('cx', this.x(d.date));
+
+						// Redraw line connecting dots
+						const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.close));
+						d3.select(this.$.svg).select('path').attr('d', valueline(inputData));
+					}
+				};
+
+				d3.select(this.$.svg).select('g').selectAll('dot')
 					.data(inputData)
 					.enter().append('circle')
+					// Define class of the circle as the phase name
+					.attr('class', d => d.name)
 					.attr('r', 8)
-					.attr('cx', function (d) {
-						return x(d.date);
+					.attr('cx', d => {
+						return this.x(d.date);
 					})
-					.attr('cy', function (d) {
-						return y(d.close);
+					.attr('cy', d => {
+						return this.y(d.close);
 					})
-					.on('mouseover', function(d) {
-						svg.append('text')
-							.attr('class', 'tooltip')
-							.text(buildTooltipText(d))
-							.attr('x', x(d.date) + 8)
-							.attr('y', y(d.close) + 16);
-					})
-					.on('mouseout', function(d) {
-						d3.selectAll('.tooltip').remove();
-					})
+					.on('mouseover', d => this.addTooltip(d))
+					.on('mouseout', () => this.removeTooltip())
 					.style('fill', d => {
 						switch(d.name){
-							case 'http://collaborne.com/schema/1.0/tasks/sensing':
+							case 'sensing':
 								return 'blue';
-							case 'http://collaborne.com/schema/1.0/tasks/visioning':
+							case 'visioning':
 								return 'red';
-							case 'http://collaborne.com/schema/1.0/tasks/prototyping':
+							case 'prototyping':
 								return 'yellow';
-							case 'http://collaborne.com/schema/1.0/tasks/scaling':
+							case 'scaling':
 								return 'green';
 							default:
 								return 'grey';
 						}
 					})
-					.call(dragbehaviour);
+					.call(d3.drag().on('drag', dragged));
+			}
 
-			// Add text with percentage to dots
-			svg.selectAll('dot')
-				.data(inputData)
-				.enter().append('text')
-				.attr('x', d => x(d.date) - 16)
-				.attr('y', d => y(d.close) - 16)
-				.text(d => `${Math.round(d.progress * 100)} %`)
-				.style('margin-bottom', '16px');
+			drawLabels(inputData) {
+				d3.select(this.$.svg).select('g').selectAll('dot')
+					.data(inputData)
+					.enter().append('text')
+					.attr('class', 'label')
+					.attr('x', d => this.x(d.date) - 16)
+					.attr('y', d => this.y(d.close) - 16)
+					.text(d => `${Math.round(d.progress * 100)} %`);
+			}
 
-			// Add the X Axis
-			svg.append('g')
-				.attr('class', 'x axis')
-				.attr('transform', 'translate(0,' + height + ')')
-				.call(xAxis);
+			ready() {
+				super.ready();
+				this.computeTodayLine();
+				this.computeYAxis();
+				this.computeXAxis();
 
-			// Add the Y Axis
-			svg.append('g')
-				.attr('class', 'y axis')
-				.call(yAxis);
+				// Define data to build the graphics
+				let inputData = this.buildInputData();
+
+				const parseDate = d3.timeParse('%Y-%m-%d');
+
+				inputData.forEach(d => {
+					// Define name of the element as the last word in the phase id
+					// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
+					d.name = d.name.split(/[/ ]+/).pop();
+					d.date = parseDate(d.date);
+					d.close = +(d.progress * 100);
+				});
+
+				this.drawScatterPlot(inputData);
+
+				this.drawLabels(inputData);
+
+				this.drawValuelinePath(inputData);
 			}
 		}
 		customElements.define(D3TaskPlanner.is, D3TaskPlanner);

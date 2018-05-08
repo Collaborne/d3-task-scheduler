@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "elements": [
     {
-      "description": "An animated chart that shows the progress as a meter\n\n### Styling\n\nThe following custom properties are available for styling:\n\nCustom property | Description | Default\n----------------|-------------|----------\n`--progress-meter-background-color` | Color of the background circle | `#e0e0e0`\n`--progress-meter-color-low` | Color of the progress bar for low values | `#f44336`\n`--progress-meter-color-medium` | Color of the progress bar for medium values | `#ffeb3b`\n`--progress-meter-color-high` | Color of the progress bar for high values | `#4caf50`\n`--progress-meter-current-font-size-scale` | Controls font size of `current-text` | `0.5`\n`--progress-meter-goal-font-size-scale` | Controls font size of `goal-text` | `0.2`\n`--progress-meter-type-font-size-scale` | Controls font size of `type-text` | `0.25`\n`--progress-meter-type-width-scale` | Controls width of `type-text` | `2`\n`--progress-meter-caption-font-size-scale` | Controls font size of `caption` | `0.2`\n`--progress-meter-caption-width-scale` | Controls width of `caption` | `2`\n\nAll the `-scale` properties are used to set the sizes proportionally to the element's `radius`. For example, by default\nthe `current-text` font size is half that of the `radius`.\n\n### Example\n\n```html\n<d3-task-planner radius=\"100\" percentage=\"0.35\" current-text=\"70\" goal-text=\"Goal: 200\" type-text=\"transactions\"></d3-task-planner>\n```",
+      "description": "A chart that shows tasks as draggable dots",
       "summary": "",
       "path": "d3-task-planner.html",
       "properties": [
@@ -582,24 +582,64 @@
           "inheritedFrom": "Polymer.ElementMixin"
         },
         {
-          "name": "_schedule",
+          "name": "deadlines",
           "type": "Object",
           "description": "",
-          "privacy": "protected",
+          "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 87,
+              "line": 139,
               "column": 5
             },
             "end": {
-              "line": 102,
+              "line": 147,
               "column": 6
             }
           },
           "metadata": {
             "polymer": {}
           },
-          "defaultValue": "{\"deadlines\":{\"http://collaborne.com/schema/1.0/tasks/sensing\":\"2018-01-16\",\"http://collaborne.com/schema/1.0/tasks/visioning\":\"2018-01-24\",\"http://collaborne.com/schema/1.0/tasks/prototyping\":\"2018-01-31\",\"http://collaborne.com/schema/1.0/tasks/scaling\":\"2018-02-08\"},\"end\":\"2018-02-08\",\"nrNormDays\":14,\"nrRealDays\":28,\"start\":\"2018-01-01\",\"timeAllocation\":0.5}"
+          "defaultValue": "{\"http://collaborne.com/schema/1.0/tasks/sensing\":\"2018-01-16\",\"http://collaborne.com/schema/1.0/tasks/visioning\":\"2018-01-24\",\"http://collaborne.com/schema/1.0/tasks/prototyping\":\"2018-01-31\",\"http://collaborne.com/schema/1.0/tasks/scaling\":\"2018-02-08\"}"
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 148,
+              "column": 5
+            },
+            "end": {
+              "line": 151,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {}
+          },
+          "defaultValue": "\"2018-02-08\""
+        },
+        {
+          "name": "start",
+          "type": "string",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 152,
+              "column": 5
+            },
+            "end": {
+              "line": 155,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {}
+          },
+          "defaultValue": "\"2018-01-01\""
         }
       ],
       "methods": [
@@ -849,11 +889,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 106,
+              "line": 185,
               "column": 3
             },
             "end": {
-              "line": 288,
+              "line": 357,
               "column": 4
             }
           },
@@ -2763,6 +2803,40 @@
             "desc": "Rewritten URL relative to base"
           },
           "inheritedFrom": "Polymer.ElementMixin"
+        },
+        {
+          "name": "buildInputData",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 159,
+              "column": 3
+            },
+            "end": {
+              "line": 169,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "computeTodayLine",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 171,
+              "column": 3
+            },
+            "end": {
+              "line": 183,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
         }
       ],
       "staticMethods": [
@@ -3709,18 +3783,67 @@
       "metadata": {},
       "sourceRange": {
         "start": {
-          "line": 75,
+          "line": 127,
           "column": 2
         },
         "end": {
-          "line": 289,
+          "line": 358,
           "column": 3
         }
       },
       "privacy": "public",
       "superclass": "Polymer.Element",
       "name": "D3TaskPlanner",
-      "attributes": [],
+      "attributes": [
+        {
+          "name": "deadlines",
+          "description": "",
+          "sourceRange": {
+            "start": {
+              "line": 139,
+              "column": 5
+            },
+            "end": {
+              "line": 147,
+              "column": 6
+            }
+          },
+          "metadata": {},
+          "type": "Object"
+        },
+        {
+          "name": "end",
+          "description": "",
+          "sourceRange": {
+            "start": {
+              "line": 148,
+              "column": 5
+            },
+            "end": {
+              "line": 151,
+              "column": 6
+            }
+          },
+          "metadata": {},
+          "type": "string"
+        },
+        {
+          "name": "start",
+          "description": "",
+          "sourceRange": {
+            "start": {
+              "line": 152,
+              "column": 5
+            },
+            "end": {
+              "line": 155,
+              "column": 6
+            }
+          },
+          "metadata": {},
+          "type": "string"
+        }
+      ],
       "events": [],
       "styling": {
         "cssVariables": [],
