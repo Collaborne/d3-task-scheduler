@@ -196,7 +196,6 @@ A chart that shows tasks as draggable dots
 					const phaseDeadline = this.deadlines[taskId];
 					// Progress is relative weight of the phase compared to the total project duration
 					const progress = (new Date(phaseDeadline).getTime() - new Date(this.start).getTime()) / projectTotalDuration;
-					console.log(taskId+"  "+progress+"  "+(progress * 100));
 					return {
 						// Define name of the element as the last word in the phase id
 						// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
@@ -322,7 +321,6 @@ A chart that shows tasks as draggable dots
 						const previousDeadline = new Date(this.deadlines[taskKey]);
 						if(new Date(previousDeadline) > new Date(oldDeadline)) {
 							this.deadlines[taskKey] = format(new Date(previousDeadline).getTime() + blockedInterval);
-							console.log(format(previousDeadline)+" / "+this.deadlines[taskKey]);
 						}
 					});
 					// Move also end
