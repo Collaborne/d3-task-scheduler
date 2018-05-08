@@ -212,7 +212,7 @@ A chart that shows tasks as draggable dots
 			_drawTodayLine() {
 				// Add vertical line on today's date
 				// const todayDate = new Date();
-				// XXX: debug with fixed data
+				// TODO: This is just for debug, using fixed data
 				const todayDate = new Date('2018-01-21T23:00:00.000Z');
 				d3.select(this.$.today)
 					.attr('x1', this.x(todayDate))
@@ -239,12 +239,13 @@ A chart that shows tasks as draggable dots
 			}
 
 			_drawScatterPlot(inputData) {
-				const dragged = (d) => {
+				const dragged = d => {
+					// TODO: this is just for debug
 					const todayDate = new Date('2018-01-21T23:00:00.000Z');
 					// Allow post-poning deadlines only after today
 					if (d.date >= todayDate && d.date > todayDate) {
 						d.date = this.x.invert(d3.event.x);
-						// Move the dots
+						// Move the current dot
 						d3.select(this.$.svg)
 							.select(`.${d.name}`)
 							.attr('cx', this.x(d.date));
