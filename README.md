@@ -7,48 +7,7 @@ To use this element:
 
 `bower install d3-task-planner`
 
-## Examples
-
-<!--
-```
-<custom-element-demo>
-  <template>
-    <link rel="import" href="d3-task-planner.html">
-    <next-code-block></next-code-block>
-  </template>
-</custom-element-demo>
-```
--->
-
 ```html
-<d3-task-planner></d3-task-planner>
-
-```
-
-### Custom Styling
-
-<!--
-```
-<custom-element-demo>
-  <template>
-    <link rel="import" href="d3-task-planner.html">
-    <next-code-block></next-code-block>
-  </template>
-</custom-element-demo>
-```
--->
-
-```html
-<style is="custom-style">
-    .custom {
-        --progress-meter-background-color: #00FFFF;
-        --progress-meter-color-low: #009999;
-        --progress-meter-color-medium: #009999;
-        --progress-meter-color-high: #009999;
-        --progress-meter-color-current: #009999;
-    }
-</style>
-
 <d3-task-planner class="custom" radius="100" percentage="0.5" current-text="10" goal-text="Goal: 20" type-text="Visits" caption="New visits per day"></d3-task-planner>
 ```
 
