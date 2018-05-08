@@ -263,7 +263,7 @@ A chart that shows tasks as draggable dots
 
 						// Redraw line connecting dots
 						const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage));
-						d3.select(this.$.svg).select('path').attr('d', valueline(inputData));
+						d3.select(this.$.svg).select('path').attr('d', valueline(newInputData));
 					}
 				};
 
