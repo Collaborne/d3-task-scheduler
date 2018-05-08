@@ -316,15 +316,19 @@ A chart that shows tasks as draggable dots
 				// that are after the current one
 				// TODO: simulates what task-scheduler library does
 				const blockedInterval = newDeadline.getTime() - oldDeadline.getTime();
-				Object.keys(this.deadlines).forEach(taskKey => {
-					const previousDeadline = new Date(this.deadlines[taskKey]);
-					if(new Date(previousDeadline) > new Date(oldDeadline)) {
-						this.deadlines[taskKey] = format(new Date(previousDeadline).getTime() + blockedInterval);
-					}
-				});
-				// Move also end
-				const oldEnd = this.end;
-				this.end = format(new Date(oldEnd).getTime() + blockedInterval);
+				// Moving is applied only when deadline has moved forward for at least 1 day
+				if (blockedInterval > 86400000) {
+					Object.keys(this.deadlines).forEach(taskKey => {
+						const previousDeadline = new Date(this.deadlines[taskKey]);
+						if(new Date(previousDeadline) > new Date(oldDeadline)) {
+							this.deadlines[taskKey] = format(new Date(previousDeadline).getTime() + blockedInterval);
+							console.log(format(previousDeadline)+" / "+this.deadlines[taskKey]);
+						}
+					});
+					// Move also end
+					const oldEnd = this.end;
+					this.end = format(new Date(oldEnd).getTime() + blockedInterval);
+				}
 
 				return this.buildInputData();
 			};
