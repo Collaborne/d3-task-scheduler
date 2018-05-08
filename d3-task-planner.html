@@ -183,7 +183,7 @@ A chart that shows tasks as draggable dots
 			}
 
 			_drawValuelinePath(inputData) {
-				const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.close));
+				const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage));
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
 					.attr('d', valueline(inputData));
@@ -191,12 +191,20 @@ A chart that shows tasks as draggable dots
 
 			buildInputData() {
 				const projectTotalDuration = new Date(this.end).getTime() - new Date(this.start).getTime();
-				return Object.keys(this.deadlines).map(idPhase => {
-					const phaseDeadline = this.deadlines[idPhase];
+				const parseDate = d3.timeParse('%Y-%m-%d');
+				return Object.keys(this.deadlines).map(taskId => {
+					const phaseDeadline = this.deadlines[taskId];
+					// Progress is relative weight of the phase compared to the total project duration
+					const progress = (new Date(phaseDeadline).getTime() - new Date(this.start).getTime()) / projectTotalDuration;
+					console.log(taskId+"  "+progress+"  "+(progress * 100));
 					return {
-						name: idPhase,
-						date: phaseDeadline,
-						progress: (new Date(phaseDeadline).getTime() - new Date(this.start).getTime()) / projectTotalDuration
+						// Define name of the element as the last word in the phase id
+						// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
+						name: taskId.split(/[/ ]+/).pop(),
+						taskId,
+						date: parseDate(phaseDeadline),
+						progress,
+						percentage: +(progress * 100)
 					};
 				});
 			}
@@ -223,7 +231,7 @@ A chart that shows tasks as draggable dots
 					.text(buildTooltipText(d))
 					.attr('x', this.x(d.date))
 					// Position tooltip under the dot so that it's readable
-					.attr('y', this.y(d.close) + 72);
+					.attr('y', this.y(d.percentage) + 72);
 			}
 
 			removeTooltip() {
@@ -241,8 +249,19 @@ A chart that shows tasks as draggable dots
 							.select(`.${d.name}`)
 							.attr('cx', this.x(d.date));
 
+						// Trigger schedule recalculation
+						const newInputData = this._recalculateSchedule(d.taskId, d.date);
+
+						// Move also other dots
+						Object.keys(newInputData).forEach(taskId => {
+							const item = newInputData[taskId];
+							d3.select(this.$.svg)
+								.select(`.${item.name}`)
+								.attr('cx', this.x(item.date));
+						});
+
 						// Redraw line connecting dots
-						const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.close));
+						const valueline = d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage));
 						d3.select(this.$.svg).select('path').attr('d', valueline(inputData));
 					}
 				};
@@ -257,7 +276,7 @@ A chart that shows tasks as draggable dots
 						return this.x(d.date);
 					})
 					.attr('cy', d => {
-						return this.y(d.close);
+						return this.y(d.percentage);
 					})
 					.on('mouseover', d => this.addTooltip(d))
 					.on('mouseout', () => this.removeTooltip())
@@ -284,9 +303,30 @@ A chart that shows tasks as draggable dots
 					.enter().append('text')
 					.attr('class', 'label')
 					.attr('x', d => this.x(d.date) - 16)
-					.attr('y', d => this.y(d.close) - 16)
+					.attr('y', d => this.y(d.percentage) - 16)
 					.text(d => `${Math.round(d.progress * 100)} %`);
 			}
+
+			_recalculateSchedule(taskId, newDeadline) {
+				const format = d3.timeFormat('%Y-%m-%d');
+				const oldDeadline = new Date(this.deadlines[taskId]);
+				this.deadlines[taskId] = format(new Date(newDeadline));
+				// Move also other deadlines
+				// that are after the current one
+				// TODO: simulates what task-scheduler library does
+				const blockedInterval = newDeadline.getTime() - oldDeadline.getTime();
+				Object.keys(this.deadlines).forEach(taskKey => {
+					const previousDeadline = new Date(this.deadlines[taskKey]);
+					if(new Date(previousDeadline) > new Date(oldDeadline)) {
+						this.deadlines[taskKey] = format(new Date(previousDeadline).getTime() + blockedInterval);
+					}
+				});
+				// Move also end
+				const oldEnd = this.end;
+				this.end = format(new Date(oldEnd).getTime() + blockedInterval);
+
+				return this.buildInputData();
+			};
 
 			ready() {
 				super.ready();
@@ -296,16 +336,6 @@ A chart that shows tasks as draggable dots
 
 				// Define data to build the graphics
 				let inputData = this.buildInputData();
-
-				const parseDate = d3.timeParse('%Y-%m-%d');
-
-				inputData.forEach(d => {
-					// Define name of the element as the last word in the phase id
-					// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
-					d.name = d.name.split(/[/ ]+/).pop();
-					d.date = parseDate(d.date);
-					d.close = +(d.progress * 100);
-				});
 
 				this._drawScatterPlot(inputData);
 
