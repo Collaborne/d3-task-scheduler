@@ -166,7 +166,7 @@ A chart that shows tasks as draggable dots
 			}
 
 			_drawXAxis() {
-				const xAxis = d3.axisBottom(this.x).tickFormat(d3.timeFormat('%b'));
+				const xAxis = d3.axisBottom(this.x).ticks(d3.timeMonth).tickFormat(d3.timeFormat('%B'));
 				d3.select(this.$.xAxis)
 					.attr('class', 'x axis')
 					// By default x axis is on the upperside
