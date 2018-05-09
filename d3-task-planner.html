@@ -182,16 +182,16 @@ A chart that shows tasks as draggable dots
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(inputData) {
+			_drawValuelinePath() {
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
-					.attr('d', this._valueline(inputData));
+					.attr('d', this._valueline(this._inputData));
 			}
 
 			buildInputData() {
 				const projectTotalDuration = new Date(this.end).getTime() - new Date(this.start).getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
-				return Object.keys(this.deadlines).map(taskId => {
+				this._inputData = Object.keys(this.deadlines).map(taskId => {
 					const phaseDeadline = this.deadlines[taskId];
 					// Progress is relative weight of the phase compared to the total project duration
 					const progress = (new Date(phaseDeadline).getTime() - new Date(this.start).getTime()) / projectTotalDuration;
@@ -240,7 +240,7 @@ A chart that shows tasks as draggable dots
 				return d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage))(data);
 			}
 
-			_drawScatterPlot(inputData) {
+			_drawScatterPlot() {
 				const dragged = d => {
 					// TODO: this is just for debug
 					const todayDate = new Date('2018-01-21T23:00:00.000Z');
@@ -253,23 +253,23 @@ A chart that shows tasks as draggable dots
 							.attr('cx', this.x(d.date));
 
 						// Trigger schedule recalculation
-						const newInputData = this._recalculateSchedule(d.taskId, d.date);
+						this._recalculateSchedule(d.taskId, d.date);
 
 						// Move also other dots
-						Object.keys(newInputData).forEach(taskId => {
-							const item = newInputData[taskId];
+						Object.keys(this._inputData).forEach(taskId => {
+							const item = this._inputData[taskId];
 							d3.select(this.$.svg)
 								.select(`.${item.name}`)
 								.attr('cx', this.x(item.date));
 						});
 
 						// Redraw line connecting dots
-						d3.select(this.$.svg).select('path').attr('d', this._valueline(newInputData));
+						d3.select(this.$.svg).select('path').attr('d', this._valueline(this._inputData));
 					}
 				};
 
 				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(inputData)
+					.data(this._inputData)
 					.enter().append('circle')
 					// Define class of the circle as the phase name
 					.attr('class', d => d.name)
@@ -299,9 +299,9 @@ A chart that shows tasks as draggable dots
 					.call(d3.drag().on('drag', dragged));
 			}
 
-			_drawLabels(inputData) {
+			_drawLabels() {
 				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(inputData)
+					.data(this._inputData)
 					.enter().append('text')
 					.attr('class', 'label')
 					.attr('x', d => this.x(d.date) - 16)
@@ -340,13 +340,13 @@ A chart that shows tasks as draggable dots
 				this._drawXAxis();
 
 				// Define data to build the graphics
-				let inputData = this.buildInputData();
+				this.buildInputData();
 
-				this._drawScatterPlot(inputData);
+				this._drawScatterPlot();
 
-				this._drawLabels(inputData);
+				this._drawLabels();
 
-				this._drawValuelinePath(inputData);
+				this._drawValuelinePath();
 			}
 		}
 		customElements.define(D3TaskPlanner.is, D3TaskPlanner);
