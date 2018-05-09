@@ -14,6 +14,7 @@ Custom property | Description | Default
 `--task-planner-background-color` | Color of the background | `#e0e0e0`
 `--task-planner-today-line-color` | Color of the line indicating today | `#808080`
 `--task-planner-valueline-color` | Color of the line connecting the dots | `#000`
+`--task-planner-grid-color` | Color of the grid lines | `#d8d8d8`
 
 ### Example
 
@@ -62,12 +63,23 @@ Custom property | Description | Default
 			.label {
 				margin-bottom: 16px;
 			}
+
+			.grid line {
+				stroke: var(--task-planner-grid-color, #d8d8d8);
+				stroke-opacity: 0.7;
+				shape-rendering: crispEdges;
+			}
+
+			.grid path {
+				stroke-width: 0;
+			}
 		</style>
 
 		<svg id="svg" width$="[[width]]" height$="[[height]]">
 			<g transform$="[[_transform]]">
 				<line id="today"></line>
 				<path id="valueLine"></path>
+				<g class="grid"></g>
 				<g id="xAxis"></g>
 				<g id="yAxis"></g>
 			</g>
@@ -345,6 +357,18 @@ Custom property | Description | Default
 				return this.buildInputData();
 			};
 
+			_drawXGridlines() {
+				// d3.select(this.$.svg).select('g').append('g')
+				// 	.attr('class', 'grid')
+				d3.select(this.$.svg).selectAll('.grid')
+					.attr('transform', 'translate(0,' + this._graphHeight + ')')
+					.call(d3.axisBottom(this.x)
+						.ticks(d3.timeMonth)
+						.tickSize(-this._graphHeight)
+						.tickFormat('')
+					);
+			}
+
 			ready() {
 				super.ready();
 				this._drawTodayLine();
@@ -359,6 +383,8 @@ Custom property | Description | Default
 				this._drawLabels();
 
 				this._drawValuelinePath();
+
+				this._drawXGridlines();
 			}
 		}
 		customElements.define(D3TaskPlanner.is, D3TaskPlanner);
