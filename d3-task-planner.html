@@ -8,7 +8,13 @@ A chart that shows tasks as draggable dots
 ### Example
 
 ```html
-<d3-task-planner width="600" height="300"></d3-progress-meter>
+<d3-task-planner
+	width="600"
+	height="300"
+	start="2018-01-01"
+	end="2018-02-08"
+	deadlines="{'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16','http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24','http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31','http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'}">
+</d3-task-planner>
 ```
 
 @demo demo/index.html
@@ -81,24 +87,18 @@ A chart that shows tasks as draggable dots
 
 			static get properties() {
 				return {
-					deadlines: {
-						type: Object,
-						value: {
-							'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16',
-							'http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24',
-							'http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31',
-							'http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'
-						}
-					},
-					end: {
-						type: String,
-						value: '2018-02-08',
-					},
-					start: {
-						type: String,
-						value: '2018-01-01',
-					},
-
+					/**
+					* Object that maps task name to scheduled deadline
+					*/
+					deadlines: Object,
+					/**
+					* String representing the last day of the schedule in the format yyyy-mm-dd
+					*/
+					end: String,
+					/**
+					* String representing the first day of the schedule in the format yyyy-mm-dd
+					*/
+					start: String,
 					/**
 					* Component width
 					*/
