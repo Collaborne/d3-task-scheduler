@@ -205,6 +205,14 @@ A chart that shows tasks as draggable dots
 						percentage: +(progress * 100)
 					};
 				});
+				// Add also one dot representing the start
+				this._inputData.unshift({
+					name: 'start',
+					taskId: 'start',
+					date: new Date(this.start),
+					progress: 0,
+					percentage: 0,
+				});
 			}
 
 			_drawTodayLine() {
