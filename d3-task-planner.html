@@ -159,6 +159,10 @@ Custom property | Description | Default
 
 			_computeTransform() {
 				return "translate(" + this.margin.left + ", " + this.margin.top + ")";
+			static get observers() {
+				return [
+					'_drawXAxis(x)',
+				];
 			}
 
 			_computeGraphWidth() {
@@ -181,8 +185,8 @@ Custom property | Description | Default
 					.range([ this.height - this.margin.top - this.margin.bottom, 0]);
 			}
 
-			_drawXAxis() {
-				const xAxis = d3.axisBottom(this.x).ticks(d3.timeMonth).tickFormat(d3.timeFormat('%B'));
+			_drawXAxis(x) {
+				const xAxis = d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat('%B'));
 				d3.select(this.$.xAxis)
 					.attr('class', 'x axis')
 					// By default x axis is on the upperside
@@ -373,7 +377,6 @@ Custom property | Description | Default
 				super.ready();
 				this._drawTodayLine();
 				this._drawYAxis();
-				this._drawXAxis();
 
 				// Define data to build the graphics
 				this.buildInputData();
