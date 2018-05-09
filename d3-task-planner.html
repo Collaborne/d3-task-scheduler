@@ -135,54 +135,56 @@ Custom property | Description | Default
 					// Functions to calculate ranges
 					x: {
 						type: Number,
-						computed: '_computeXrange()'
+						computed: '_computeXrange(start, end, width, margin)'
 					},
 					y: {
 						type: Number,
-						computed: '_computeYrange()'
+						computed: '_computeYrange(height, margin)'
 					},
 					// Graph dimensions
 					_graphWidth: {
 						type: Number,
-						computed: '_computeGraphWidth()'
+						computed: '_computeGraphWidth(width, margin)'
 					},
 					_graphHeight: {
 						type: Number,
-						computed: '_computeGraphHeight()'
+						computed: '_computeGraphHeight(height, margin)'
 					},
 					_transform: {
 						type: String,
-						computed: '_computeTransform()'
+						computed: '_computeTransform(margin)'
 					},
 				};
 			}
 
-			_computeTransform() {
-				return "translate(" + this.margin.left + ", " + this.margin.top + ")";
 			static get observers() {
 				return [
 					'_drawXAxis(x)',
 				];
 			}
 
-			_computeGraphWidth() {
-				return this.width - this.margin.left - this.margin.right;
+			_computeTransform(margin) {
+				return `translate(${margin.left}, ${margin.top})`;
 			}
 
-			_computeGraphHeight() {
-				return this.height - this.margin.top - this.margin.bottom;
+			_computeGraphWidth(width, margin) {
+				return width - margin.left - margin.right;
 			}
 
-			_computeXrange() {
+			_computeGraphHeight(height, margin) {
+				return height - margin.top - margin.bottom;
+			}
+
+			_computeXrange(start, end, width, margin) {
 				return d3.scaleTime()
-					.domain([new Date(this.start), new Date(this.end)])
-					.range([0, this.width - this.margin.left - this.margin.right]);
+					.domain([new Date(start), new Date(end)])
+					.range([0, width - margin.left - margin.right]);
 			}
 
-			_computeYrange() {
+			_computeYrange(height, margin) {
 				return d3.scaleLinear()
 					.domain([0, 100])
-					.range([ this.height - this.margin.top - this.margin.bottom, 0]);
+					.range([height - margin.top - margin.bottom, 0]);
 			}
 
 			_drawXAxis(x) {
