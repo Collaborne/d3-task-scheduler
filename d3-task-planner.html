@@ -23,7 +23,6 @@ Custom property | Description | Default
 	width="600"
 	height="300"
 	start="2018-01-01"
-	end="2018-02-08"
 	deadlines="{'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16','http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24','http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31','http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'}">
 </d3-task-planner>
 ```
@@ -108,10 +107,6 @@ Custom property | Description | Default
 					*/
 					deadlines: Object,
 					/**
-					* String representing the last day of the schedule in the format yyyy-mm-dd
-					*/
-					end: String,
-					/**
 					* String representing the first day of the schedule in the format yyyy-mm-dd
 					*/
 					start: String,
@@ -122,6 +117,10 @@ Custom property | Description | Default
 					/**
 					* Component height
 					*/
+					end: {
+						type: String,
+						computed: '_computeEnd(deadlines)'
+					},
 					height: Number,
 					margin: {
 						type: Object,
@@ -164,6 +163,12 @@ Custom property | Description | Default
 					'_drawTodayLine(x)',
 					'_drawXGridlines(x)',
 				];
+			}
+
+			_computeEnd(deadlines) {
+				const taskIds = Object.keys(this.deadlines);
+				const lastTaskId = taskIds[taskIds.length - 1];
+				return this.deadlines[lastTaskId];
 			}
 
 			_computeTransform(margin) {
