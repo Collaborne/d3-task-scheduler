@@ -307,7 +307,7 @@ Custom property | Description | Default
 						});
 
 						// Redraw line connecting dots
-						d3.select(this.$.svg).select('path').attr('d', this._valueline(this._inputData));
+						this._drawValuelinePath();
 					}
 				};
 
