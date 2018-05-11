@@ -295,9 +295,11 @@ Custom property | Description | Default
 							.select(`.${d.name}`)
 							.attr('cx', this.x(d.date));
 
-						// Trigger schedule recalculation
-						const taskIndex = this._inputData.indexOf(d);
-						this._recalculateSchedule(taskIndex, timeDelta);
+						// Trigger schedule recalculation if dot is moved forward
+						if (timeDelta > 0) {
+							const taskIndex = this._inputData.indexOf(d);
+							this._recalculateSchedule(taskIndex, timeDelta);
+						}
 
 						// Move also other dots
 						this._inputData.forEach(taskItem => {
