@@ -160,6 +160,9 @@ Custom property | Description | Default
 			static get observers() {
 				return [
 					'_drawXAxis(x)',
+					'_drawYAxis(y)',
+					'_drawTodayLine(x)',
+					'_drawXGridlines(x)',
 				];
 			}
 
@@ -197,8 +200,8 @@ Custom property | Description | Default
 					.call(xAxis);
 			}
 
-			_drawYAxis() {
-				const yAxis = d3.axisLeft(this.y);
+			_drawYAxis(y) {
+				const yAxis = d3.axisLeft(y);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
@@ -237,15 +240,16 @@ Custom property | Description | Default
 				});
 			}
 
-			_drawTodayLine() {
+			_drawTodayLine(x) {
 				// Add vertical line on today's date
 				// const todayDate = new Date();
 				// TODO: This is just for debug, using fixed data
 				const todayDate = new Date('2018-01-21T23:00:00.000Z');
+				const todayXCoordinate = x(todayDate);
 				d3.select(this.$.today)
-					.attr('x1', this.x(todayDate))
+					.attr('x1', todayXCoordinate)
 					.attr('y1', 0)
-					.attr('x2', this.x(todayDate))
+					.attr('x2', todayXCoordinate)
 					.attr('y2', this._graphHeight);
 			}
 
@@ -363,12 +367,10 @@ Custom property | Description | Default
 				return this.buildInputData();
 			};
 
-			_drawXGridlines() {
-				// d3.select(this.$.svg).select('g').append('g')
-				// 	.attr('class', 'grid')
+			_drawXGridlines(x) {
 				d3.select(this.$.svg).selectAll('.grid')
 					.attr('transform', 'translate(0,' + this._graphHeight + ')')
-					.call(d3.axisBottom(this.x)
+					.call(d3.axisBottom(x)
 						.ticks(d3.timeMonth)
 						.tickSize(-this._graphHeight)
 						.tickFormat('')
@@ -377,9 +379,6 @@ Custom property | Description | Default
 
 			ready() {
 				super.ready();
-				this._drawTodayLine();
-				this._drawYAxis();
-
 				// Define data to build the graphics
 				this.buildInputData();
 
@@ -388,8 +387,6 @@ Custom property | Description | Default
 				this._drawLabels();
 
 				this._drawValuelinePath();
-
-				this._drawXGridlines();
 			}
 		}
 		customElements.define(D3TaskPlanner.is, D3TaskPlanner);
