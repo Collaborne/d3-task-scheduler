@@ -135,11 +135,11 @@ Custom property | Description | Default
 					// Functions to calculate ranges
 					x: {
 						type: Number,
-						computed: '_computeXrange(start, end, width, margin)'
+						computed: '_computeXRange(start, end, width, margin)'
 					},
 					y: {
 						type: Number,
-						computed: '_computeYrange(height, margin)'
+						computed: '_computeYRange(height, margin)'
 					},
 					// Graph dimensions
 					_graphWidth: {
@@ -178,13 +178,13 @@ Custom property | Description | Default
 				return height - margin.top - margin.bottom;
 			}
 
-			_computeXrange(start, end, width, margin) {
+			_computeXRange(start, end, width, margin) {
 				return d3.scaleTime()
 					.domain([new Date(start), new Date(end)])
 					.range([0, width - margin.left - margin.right]);
 			}
 
-			_computeYrange(height, margin) {
+			_computeYRange(height, margin) {
 				return d3.scaleLinear()
 					.domain([0, 100])
 					.range([height - margin.top - margin.bottom, 0]);
