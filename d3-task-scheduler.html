@@ -11,30 +11,30 @@ The following custom properties are available for styling:
 
 Custom property | Description | Default
 ----------------|-------------|----------
-`--task-planner-background-color` | Color of the background | `#e0e0e0`
-`--task-planner-today-line-color` | Color of the line indicating today | `#808080`
-`--task-planner-valueline-color` | Color of the line connecting the dots | `#71af26`
-`--task-planner-grid-color` | Color of the grid lines | `#d8d8d8`
+`--task-scheduler-background-color` | Color of the background | `#e0e0e0`
+`--task-scheduler-today-line-color` | Color of the line indicating today | `#808080`
+`--task-scheduler-valueline-color` | Color of the line connecting the dots | `#71af26`
+`--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
 
 ### Example
 
 ```html
-<d3-task-planner
+<d3-task-scheduler
 	width="600"
 	height="300"
 	start="2018-01-01"
 	deadlines="{'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16','http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24','http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31','http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'}">
-</d3-task-planner>
+</d3-task-scheduler>
 ```
 
 @demo demo/index.html
 -->
-<dom-module id='d3-task-planner'>
+<dom-module id='d3-task-scheduler'>
 	<template>
 		<style>
 			:host {
 				display: inline-block;
-				background-color: var(--task-planner-background-color, #e0e0e0);
+				background-color: var(--task-scheduler-background-color, #e0e0e0);
 			}
 			path {
 				stroke-width: 2;
@@ -53,18 +53,18 @@ Custom property | Description | Default
 			}
 			#today {
 				stroke-width: 2;
-				stroke: var(--task-planner-today-line-color, #808080);
+				stroke: var(--task-scheduler-today-line-color, #808080);
 			}
 			#valueLine {
 				fill: none;
-				stroke: var(--task-planner-valueline-color, #71af26);
+				stroke: var(--task-scheduler-valueline-color, #71af26);
 			}
 			.label {
 				margin-bottom: 16px;
 			}
 
 			.grid line {
-				stroke: var(--task-planner-grid-color, #d8d8d8);
+				stroke: var(--task-scheduler-grid-color, #d8d8d8);
 				stroke-opacity: 0.7;
 				shape-rendering: crispEdges;
 			}
@@ -90,10 +90,10 @@ Custom property | Description | Default
 		 * @customElement
 		 * @polymer
 		 */
-		class D3TaskPlanner extends Polymer.Element {
+		class D3TaskScheduler extends Polymer.Element {
 
 			static get is() {
-				return 'd3-task-planner';
+				return 'd3-task-scheduler';
 			}
 
 			constructor() {
@@ -401,6 +401,6 @@ Custom property | Description | Default
 				this._drawValuelinePath();
 			}
 		}
-		customElements.define(D3TaskPlanner.is, D3TaskPlanner);
+		customElements.define(D3TaskScheduler.is, D3TaskScheduler);
 	</script>
 </dom-module>

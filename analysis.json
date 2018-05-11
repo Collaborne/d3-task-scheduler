@@ -2,9 +2,9 @@
   "schema_version": "1.0.0",
   "elements": [
     {
-      "description": "A chart that shows tasks as draggable dots",
+      "description": "A chart that shows tasks as draggable dots\n\n### Styling\n\nThe following custom properties are available for styling:\n\nCustom property | Description | Default\n----------------|-------------|----------\n`--task-scheduler-background-color` | Color of the background | `#e0e0e0`\n`--task-scheduler-today-line-color` | Color of the line indicating today | `#808080`\n`--task-scheduler-valueline-color` | Color of the line connecting the dots | `#71af26`\n`--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`\n\n### Example\n\n```html\n<d3-task-scheduler\n  width=\"600\"\n  height=\"300\"\n  start=\"2018-01-01\"\n  deadlines=\"{'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16','http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24','http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31','http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'}\">\n</d3-task-scheduler>\n```",
       "summary": "",
-      "path": "d3-task-planner.html",
+      "path": "d3-task-scheduler.html",
       "properties": [
         {
           "name": "__dataClientsReady",
@@ -584,62 +584,223 @@
         {
           "name": "deadlines",
           "type": "Object",
-          "description": "",
+          "description": "Object that maps task name to scheduled deadline",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 139,
+              "line": 107,
               "column": 5
             },
             "end": {
-              "line": 147,
-              "column": 6
+              "line": 107,
+              "column": 22
             }
           },
           "metadata": {
             "polymer": {}
-          },
-          "defaultValue": "{\"http://collaborne.com/schema/1.0/tasks/sensing\":\"2018-01-16\",\"http://collaborne.com/schema/1.0/tasks/visioning\":\"2018-01-24\",\"http://collaborne.com/schema/1.0/tasks/prototyping\":\"2018-01-31\",\"http://collaborne.com/schema/1.0/tasks/scaling\":\"2018-02-08\"}"
-        },
-        {
-          "name": "end",
-          "type": "string",
-          "description": "",
-          "privacy": "public",
-          "sourceRange": {
-            "start": {
-              "line": 148,
-              "column": 5
-            },
-            "end": {
-              "line": 151,
-              "column": 6
-            }
-          },
-          "metadata": {
-            "polymer": {}
-          },
-          "defaultValue": "\"2018-02-08\""
+          }
         },
         {
           "name": "start",
           "type": "string",
+          "description": "String representing the first day of the schedule in the format yyyy-mm-dd",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 111,
+              "column": 5
+            },
+            "end": {
+              "line": 111,
+              "column": 18
+            }
+          },
+          "metadata": {
+            "polymer": {}
+          }
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "description": "Component width",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 115,
+              "column": 5
+            },
+            "end": {
+              "line": 115,
+              "column": 18
+            }
+          },
+          "metadata": {
+            "polymer": {}
+          }
+        },
+        {
+          "name": "end",
+          "type": "string",
+          "description": "Component height",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 119,
+              "column": 5
+            },
+            "end": {
+              "line": 122,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "readOnly": true
+            }
+          }
+        },
+        {
+          "name": "height",
+          "type": "number",
           "description": "",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 152,
+              "line": 123,
               "column": 5
             },
             "end": {
-              "line": 155,
+              "line": 123,
+              "column": 19
+            }
+          },
+          "metadata": {
+            "polymer": {}
+          }
+        },
+        {
+          "name": "margin",
+          "type": "Object",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 124,
+              "column": 5
+            },
+            "end": {
+              "line": 132,
               "column": 6
             }
           },
           "metadata": {
             "polymer": {}
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "description": "Functions to calculate ranges",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 134,
+              "column": 5
+            },
+            "end": {
+              "line": 137,
+              "column": 6
+            }
           },
-          "defaultValue": "\"2018-01-01\""
+          "metadata": {
+            "polymer": {
+              "readOnly": true
+            }
+          }
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 138,
+              "column": 5
+            },
+            "end": {
+              "line": 141,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "readOnly": true
+            }
+          }
+        },
+        {
+          "name": "_graphWidth",
+          "type": "number",
+          "description": "Graph dimensions",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 143,
+              "column": 5
+            },
+            "end": {
+              "line": 146,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "readOnly": true
+            }
+          }
+        },
+        {
+          "name": "_graphHeight",
+          "type": "number",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 147,
+              "column": 5
+            },
+            "end": {
+              "line": 150,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "readOnly": true
+            }
+          }
+        },
+        {
+          "name": "_transform",
+          "type": "string",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 151,
+              "column": 5
+            },
+            "end": {
+              "line": 154,
+              "column": 6
+            }
+          },
+          "metadata": {
+            "polymer": {
+              "readOnly": true
+            }
+          }
         }
       ],
       "methods": [
@@ -889,11 +1050,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 185,
+              "line": 391,
               "column": 3
             },
             "end": {
-              "line": 357,
+              "line": 401,
               "column": 4
             }
           },
@@ -2805,29 +2966,78 @@
           "inheritedFrom": "Polymer.ElementMixin"
         },
         {
-          "name": "buildInputData",
+          "name": "_computeEnd",
           "description": "",
-          "privacy": "public",
+          "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 159,
+              "line": 167,
               "column": 3
             },
             "end": {
-              "line": 169,
+              "line": 171,
               "column": 4
             }
           },
           "metadata": {},
-          "params": []
+          "params": [
+            {
+              "name": "deadlines"
+            }
+          ]
         },
         {
-          "name": "computeTodayLine",
+          "name": "_computeTransform",
           "description": "",
-          "privacy": "public",
+          "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 171,
+              "line": 173,
+              "column": 3
+            },
+            "end": {
+              "line": 175,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "margin"
+            }
+          ]
+        },
+        {
+          "name": "_computeGraphWidth",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 177,
+              "column": 3
+            },
+            "end": {
+              "line": 179,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "width"
+            },
+            {
+              "name": "margin"
+            }
+          ]
+        },
+        {
+          "name": "_computeGraphHeight",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 181,
               "column": 3
             },
             "end": {
@@ -2836,7 +3046,320 @@
             }
           },
           "metadata": {},
+          "params": [
+            {
+              "name": "height"
+            },
+            {
+              "name": "margin"
+            }
+          ]
+        },
+        {
+          "name": "_computeXRange",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 185,
+              "column": 3
+            },
+            "end": {
+              "line": 193,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "start"
+            },
+            {
+              "name": "end"
+            },
+            {
+              "name": "width"
+            },
+            {
+              "name": "margin"
+            }
+          ]
+        },
+        {
+          "name": "_computeYRange",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 195,
+              "column": 3
+            },
+            "end": {
+              "line": 199,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "height"
+            },
+            {
+              "name": "margin"
+            }
+          ]
+        },
+        {
+          "name": "_drawXAxis",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 201,
+              "column": 3
+            },
+            "end": {
+              "line": 209,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "x"
+            }
+          ]
+        },
+        {
+          "name": "_drawYAxis",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 211,
+              "column": 3
+            },
+            "end": {
+              "line": 216,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "y"
+            }
+          ]
+        },
+        {
+          "name": "_drawValuelinePath",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 218,
+              "column": 3
+            },
+            "end": {
+              "line": 222,
+              "column": 4
+            }
+          },
+          "metadata": {},
           "params": []
+        },
+        {
+          "name": "buildInputData",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 224,
+              "column": 3
+            },
+            "end": {
+              "line": 249,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "_drawTodayLine",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 251,
+              "column": 3
+            },
+            "end": {
+              "line": 260,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "x"
+            }
+          ]
+        },
+        {
+          "name": "addTooltip",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 262,
+              "column": 3
+            },
+            "end": {
+              "line": 273,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "d"
+            }
+          ]
+        },
+        {
+          "name": "removeTooltip",
+          "description": "",
+          "privacy": "public",
+          "sourceRange": {
+            "start": {
+              "line": 275,
+              "column": 3
+            },
+            "end": {
+              "line": 277,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "_valueline",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 279,
+              "column": 3
+            },
+            "end": {
+              "line": 281,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "data"
+            }
+          ]
+        },
+        {
+          "name": "_drawScatterPlot",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 283,
+              "column": 3
+            },
+            "end": {
+              "line": 352,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "_drawLabels",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 354,
+              "column": 3
+            },
+            "end": {
+              "line": 362,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "_redrawLabels",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 364,
+              "column": 3
+            },
+            "end": {
+              "line": 367,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "_recalculateSchedule",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 369,
+              "column": 3
+            },
+            "end": {
+              "line": 379,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "taskIndex"
+            },
+            {
+              "name": "timeDelta"
+            }
+          ]
+        },
+        {
+          "name": "_drawXGridlines",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 381,
+              "column": 3
+            },
+            "end": {
+              "line": 389,
+              "column": 4
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "x"
+            }
+          ]
         }
       ],
       "staticMethods": [
@@ -3783,28 +4306,108 @@
       "metadata": {},
       "sourceRange": {
         "start": {
-          "line": 127,
+          "line": 92,
           "column": 2
         },
         "end": {
-          "line": 358,
+          "line": 402,
           "column": 3
         }
       },
       "privacy": "public",
       "superclass": "Polymer.Element",
-      "name": "D3TaskPlanner",
+      "name": "D3TaskScheduler",
       "attributes": [
         {
           "name": "deadlines",
-          "description": "",
+          "description": "Object that maps task name to scheduled deadline",
           "sourceRange": {
             "start": {
-              "line": 139,
+              "line": 107,
               "column": 5
             },
             "end": {
-              "line": 147,
+              "line": 107,
+              "column": 22
+            }
+          },
+          "metadata": {},
+          "type": "Object"
+        },
+        {
+          "name": "start",
+          "description": "String representing the first day of the schedule in the format yyyy-mm-dd",
+          "sourceRange": {
+            "start": {
+              "line": 111,
+              "column": 5
+            },
+            "end": {
+              "line": 111,
+              "column": 18
+            }
+          },
+          "metadata": {},
+          "type": "string"
+        },
+        {
+          "name": "width",
+          "description": "Component width",
+          "sourceRange": {
+            "start": {
+              "line": 115,
+              "column": 5
+            },
+            "end": {
+              "line": 115,
+              "column": 18
+            }
+          },
+          "metadata": {},
+          "type": "number"
+        },
+        {
+          "name": "end",
+          "description": "Component height",
+          "sourceRange": {
+            "start": {
+              "line": 119,
+              "column": 5
+            },
+            "end": {
+              "line": 122,
+              "column": 6
+            }
+          },
+          "metadata": {},
+          "type": "string"
+        },
+        {
+          "name": "height",
+          "description": "",
+          "sourceRange": {
+            "start": {
+              "line": 123,
+              "column": 5
+            },
+            "end": {
+              "line": 123,
+              "column": 19
+            }
+          },
+          "metadata": {},
+          "type": "number"
+        },
+        {
+          "name": "margin",
+          "description": "",
+          "sourceRange": {
+            "start": {
+              "line": 124,
+              "column": 5
+            },
+            "end": {
+              "line": 132,
               "column": 6
             }
           },
@@ -3812,36 +4415,36 @@
           "type": "Object"
         },
         {
-          "name": "end",
-          "description": "",
+          "name": "x",
+          "description": "Functions to calculate ranges",
           "sourceRange": {
             "start": {
-              "line": 148,
+              "line": 134,
               "column": 5
             },
             "end": {
-              "line": 151,
+              "line": 137,
               "column": 6
             }
           },
           "metadata": {},
-          "type": "string"
+          "type": "number"
         },
         {
-          "name": "start",
+          "name": "y",
           "description": "",
           "sourceRange": {
             "start": {
-              "line": 152,
+              "line": 138,
               "column": 5
             },
             "end": {
-              "line": 155,
+              "line": 141,
               "column": 6
             }
           },
           "metadata": {},
-          "type": "string"
+          "type": "number"
         }
       ],
       "events": [],
@@ -3850,7 +4453,7 @@
         "selectors": []
       },
       "slots": [],
-      "tagname": "d3-task-planner"
+      "tagname": "d3-task-scheduler"
     }
   ]
 }

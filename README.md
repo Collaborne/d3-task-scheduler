@@ -1,14 +1,14 @@
-d3-task-planner
+d3-task-scheduler
 =================
 
-`d3-task-planner` is a chart that shows tasks as draggable dots. It accepts as input a schedule as it's modeled by the [tasks-scheduler](https://github.com/Collaborne/tasks-scheduler). The web component is built with [Polymer 2.x](https://www.polymer-project.org) and [D3 v.4](http://d3js.org).
+`d3-task-scheduler` is a chart that shows tasks as draggable dots. It accepts as input a schedule as it's modeled by the [tasks-scheduler](https://github.com/Collaborne/tasks-scheduler). The web component is built with [Polymer 2.x](https://www.polymer-project.org) and [D3 v.4](http://d3js.org).
 
 To use this element:
 
-`bower install d3-task-planner`
+`bower install d3-task-scheduler`
 
 ```html
-<d3-task-planner class="custom" radius="100" percentage="0.5" current-text="10" goal-text="Goal: 20" type-text="Visits" caption="New visits per day"></d3-task-planner>
+<d3-task-scheduler class="custom" radius="100" percentage="0.5" current-text="10" goal-text="Goal: 20" type-text="Visits" caption="New visits per day"></d3-task-scheduler>
 ```
 
 ## License

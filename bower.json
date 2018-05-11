@@ -1,10 +1,10 @@
 {
-  "name": "d3-task-planner",
+  "name": "d3-task-scheduler",
   "authors": [
     "collaborne"
   ],
-  "description": "Web component providing a D3 based task planner",
-  "main": "d3-task-planner.html",
+  "description": "Web component providing a D3 based task scheduler",
+  "main": "d3-task-scheduler.html",
   "keywords": [
     "web-components",
     "polymer",
