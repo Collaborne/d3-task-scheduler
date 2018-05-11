@@ -184,7 +184,7 @@ Custom property | Description | Default
 			}
 
 			_computeXRange(start, end, width, margin) {
-				// Expand time limit for the end, so that last dot is 
+				// Expand time limit for the end of 1 month and a half, so that last dot is 
 				// draggable after the scheduled end of the project
 				const endMonth = new Date(end).getMonth();
 				const expandedEnd = new Date(end).setMonth(endMonth + 1.5);
@@ -251,9 +251,7 @@ Custom property | Description | Default
 
 			_drawTodayLine(x) {
 				// Add vertical line on today's date
-				// const todayDate = new Date();
-				// TODO: This is just for debug, using fixed data
-				const todayDate = new Date('2018-01-21T23:00:00.000Z');
+				const todayDate = new Date();
 				const todayXCoordinate = x(todayDate);
 				d3.select(this.$.today)
 					.attr('x1', todayXCoordinate)
@@ -285,10 +283,9 @@ Custom property | Description | Default
 
 			_drawScatterPlot() {
 				const dragged = d => {
-					// TODO: this is just for debug
-					const todayDate = new Date('2018-01-21T23:00:00.000Z');
+					const todayDate = new Date();
 					// Allow post-poning deadlines only after today
-					if (d.date >= todayDate && d.date > todayDate) {
+					if (d.date >= todayDate) {
 						// Save previous deadline value
 						const oldDeadline = d.date;
 						// Update the date for the dragged task
