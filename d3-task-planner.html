@@ -280,21 +280,26 @@ Custom property | Description | Default
 					const todayDate = new Date('2018-01-21T23:00:00.000Z');
 					// Allow post-poning deadlines only after today
 					if (d.date >= todayDate && d.date > todayDate) {
+						// Save previous deadline value
+						const oldDeadline = d.date;
+						// Update the date for the dragged task
 						d.date = this.x.invert(d3.event.x);
+						// Save time delta
+						const timeDelta = d.date - oldDeadline;
 						// Move the current dot
 						d3.select(this.$.svg)
 							.select(`.${d.name}`)
 							.attr('cx', this.x(d.date));
 
 						// Trigger schedule recalculation
-						this._recalculateSchedule(d.taskId, d.date);
+						const taskIndex = this._inputData.indexOf(d);
+						this._recalculateSchedule(taskIndex, timeDelta);
 
 						// Move also other dots
-						Object.keys(this._inputData).forEach(taskId => {
-							const item = this._inputData[taskId];
+						this._inputData.forEach(taskItem => {
 							d3.select(this.$.svg)
-								.select(`.${item.name}`)
-								.attr('cx', this.x(item.date));
+								.select(`.${taskItem.name}`)
+								.attr('cx', this.x(taskItem.date));
 						});
 
 						// Redraw line connecting dots
@@ -343,29 +348,17 @@ Custom property | Description | Default
 					.text(d => `${Math.round(d.progress * 100)} %`);
 			}
 
-			_recalculateSchedule(taskId, newDeadline) {
+			_recalculateSchedule(taskIndex, timeDelta) {
 				const format = d3.timeFormat('%Y-%m-%d');
-				const oldDeadline = new Date(this.deadlines[taskId]);
-				this.deadlines[taskId] = format(new Date(newDeadline));
-				// Move also other deadlines
-				// that are after the current one
-				// TODO: simulates what task-scheduler library does
-				const blockedInterval = newDeadline.getTime() - oldDeadline.getTime();
-				// Moving is applied only when deadline has moved forward for at least 1 day
-				if (blockedInterval > 86400000) {
-					Object.keys(this.deadlines).forEach(taskKey => {
-						const previousDeadline = new Date(this.deadlines[taskKey]);
-						if(new Date(previousDeadline) > new Date(oldDeadline)) {
-							this.deadlines[taskKey] = format(new Date(previousDeadline).getTime() + blockedInterval);
-						}
+				this._inputData
+					// Consider only tasks after the one dragged
+					.filter(item => this._inputData.indexOf(item) > taskIndex)
+					// Move date for them too
+					.map(taskItem => {
+						const previousDeadline = new Date(taskItem.date);
+						taskItem.date = new Date(previousDeadline).getTime() + timeDelta;
 					});
-					// Move also end
-					const oldEnd = this.end;
-					this.end = format(new Date(oldEnd).getTime() + blockedInterval);
-				}
-
-				return this.buildInputData();
-			};
+			}
 
 			_drawXGridlines(x) {
 				d3.select(this.$.svg).selectAll('.grid')
