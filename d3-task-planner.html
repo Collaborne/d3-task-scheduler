@@ -179,8 +179,12 @@ Custom property | Description | Default
 			}
 
 			_computeXRange(start, end, width, margin) {
+				// Expand time limit for the end, so that last dot is 
+				// draggable after the scheduled end of the project
+				const endMonth = new Date(end).getMonth();
+				const expandedEnd = new Date(end).setMonth(endMonth + 1.5);
 				return d3.scaleTime()
-					.domain([new Date(start), new Date(end)])
+					.domain([new Date(start), expandedEnd])
 					.range([0, width - margin.left - margin.right]);
 			}
 
