@@ -285,7 +285,10 @@ Custom property | Description | Default
 				const dragged = d => {
 					const todayDate = new Date();
 					// Allow post-poning deadlines only after today
-					if (d.date >= todayDate) {
+					// and not after the graph X edge
+					const endMonth = new Date(this.end).getMonth();
+					const expandedEnd = new Date(this.end).setMonth(endMonth + 1.5);
+					if (d.date >= todayDate && d.date < expandedEnd) {
 						// Save previous deadline value
 						const oldDeadline = d.date;
 						// Update the date for the dragged task
