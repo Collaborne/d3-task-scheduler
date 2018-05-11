@@ -310,6 +310,9 @@ Custom property | Description | Default
 
 						// Redraw line connecting dots
 						this._drawValuelinePath();
+
+						// Redraw dot labels
+						this._redrawLabels();
 					}
 				};
 
@@ -352,6 +355,11 @@ Custom property | Description | Default
 					.attr('x', d => this.x(d.date) - 16)
 					.attr('y', d => this.y(d.percentage) - 16)
 					.text(d => `${Math.round(d.progress * 100)} %`);
+			}
+
+			_redrawLabels() {
+				d3.select(this.$.svg).select('g').selectAll('text.label')
+					.attr('x', d => this.x(d.date) - 16);
 			}
 
 			_recalculateSchedule(taskIndex, timeDelta) {
