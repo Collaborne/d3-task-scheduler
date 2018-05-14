@@ -8,7 +8,12 @@ To use this element:
 `bower install d3-task-scheduler`
 
 ```html
-<d3-task-scheduler class="custom" radius="100" percentage="0.5" current-text="10" goal-text="Goal: 20" type-text="Visits" caption="New visits per day"></d3-task-scheduler>
+<d3-task-scheduler
+    width="600"
+    height="300"
+    start="2018-04-10"
+    deadlines='{"http://collaborne.com/schema/1.0/tasks/sensing": "2018-04-25","http://collaborne.com/schema/1.0/tasks/visioning": "2018-05-05","http://collaborne.com/schema/1.0/tasks/prototyping": "2018-05-20","http://collaborne.com/schema/1.0/tasks/scaling": "2018-06-01"}'>
+</d3-task-scheduler>
 ```
 
 ## License
