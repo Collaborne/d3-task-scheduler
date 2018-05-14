@@ -162,6 +162,10 @@ Custom property | Description | Default
 					'_drawYAxis(y)',
 					'_drawTodayLine(x)',
 					'_drawXGridlines(x)',
+					'_buildInputData(start, end, deadlines)',
+					'_drawScatterPlot(_inputData)',
+					'_drawLabels(_inputData)',
+					'_drawValuelinePath(_inputData)',
 				];
 			}
 
@@ -216,19 +220,25 @@ Custom property | Description | Default
 					.call(yAxis);
 			}
 
-			_drawValuelinePath() {
+			_drawValuelinePath(inputData) {
+				if (!inputData) {
+					return;
+				}
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
-					.attr('d', this._valueline(this._inputData));
+					.attr('d', this._valueline(inputData));
 			}
 
-			buildInputData() {
-				const projectTotalDuration = new Date(this.end).getTime() - new Date(this.start).getTime();
+			_buildInputData(start, end, deadlines) {
+				if (!start || !end || !deadlines) {
+					return;
+				}
+				const projectTotalDuration = new Date(end).getTime() - new Date(start).getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
-				this._inputData = Object.keys(this.deadlines).map(taskId => {
-					const phaseDeadline = this.deadlines[taskId];
+				this._inputData = Object.keys(deadlines).map(taskId => {
+					const phaseDeadline = deadlines[taskId];
 					// Progress is relative weight of the phase compared to the total project duration
-					const progress = (new Date(phaseDeadline).getTime() - new Date(this.start).getTime()) / projectTotalDuration;
+					const progress = (new Date(phaseDeadline).getTime() - new Date(start).getTime()) / projectTotalDuration;
 					return {
 						// Define name of the element as the last word in the phase id
 						// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
@@ -243,7 +253,7 @@ Custom property | Description | Default
 				this._inputData.unshift({
 					name: 'start',
 					taskId: 'start',
-					date: new Date(this.start),
+					date: new Date(start),
 					progress: 0,
 					percentage: 0,
 				});
@@ -281,7 +291,10 @@ Custom property | Description | Default
 				return d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage))(data);
 			}
 
-			_drawScatterPlot() {
+			_drawScatterPlot(inputData) {
+				if (!inputData) {
+					return;
+				}
 				const dragged = d => {
 					const todayDate = new Date();
 					// Allow post-poning deadlines only after today
@@ -302,19 +315,19 @@ Custom property | Description | Default
 
 						// Trigger schedule recalculation if dot is moved forward
 						if (timeDelta > 0) {
-							const taskIndex = this._inputData.indexOf(d);
+							const taskIndex = inputData.indexOf(d);
 							this._recalculateSchedule(taskIndex, timeDelta);
 						}
 
 						// Move also other dots
-						this._inputData.forEach(taskItem => {
+						inputData.forEach(taskItem => {
 							d3.select(this.$.svg)
 								.select(`.${taskItem.name}`)
 								.attr('cx', this.x(taskItem.date));
 						});
 
 						// Redraw line connecting dots
-						this._drawValuelinePath();
+						this._drawValuelinePath(inputData);
 
 						// Redraw dot labels
 						this._redrawLabels();
@@ -322,7 +335,7 @@ Custom property | Description | Default
 				};
 
 				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(this._inputData)
+					.data(inputData)
 					.enter().append('circle')
 					// Define class of the circle as the phase name
 					.attr('class', d => d.name)
@@ -352,9 +365,12 @@ Custom property | Description | Default
 					.call(d3.drag().on('drag', dragged));
 			}
 
-			_drawLabels() {
+			_drawLabels(inputData) {
+				if (!inputData) {
+					return;
+				}
 				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(this._inputData)
+					.data(inputData)
 					.enter().append('text')
 					.attr('class', 'label')
 					.attr('x', d => this.x(d.date) - 16)
@@ -387,18 +403,6 @@ Custom property | Description | Default
 						.tickSize(-this._graphHeight)
 						.tickFormat('')
 					);
-			}
-
-			ready() {
-				super.ready();
-				// Define data to build the graphics
-				this.buildInputData();
-
-				this._drawScatterPlot();
-
-				this._drawLabels();
-
-				this._drawValuelinePath();
 			}
 		}
 		customElements.define(D3TaskScheduler.is, D3TaskScheduler);
