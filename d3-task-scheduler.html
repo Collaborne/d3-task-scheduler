@@ -165,7 +165,7 @@ Custom property | Description | Default
 					'_buildInputData(start, end, deadlines)',
 					'_drawScatterPlot(_inputData)',
 					'_drawLabels(_inputData)',
-					'_drawValuelinePath(_inputData)',
+					'_drawValuelinePath(_inputData, _nrOfDots)',
 				];
 			}
 
@@ -221,7 +221,7 @@ Custom property | Description | Default
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(inputData) {
+			_drawValuelinePath(inputData, nrOfDots) {
 				if (!inputData) {
 					return;
 				}
@@ -258,6 +258,8 @@ Custom property | Description | Default
 					progress: 0,
 					percentage: 0,
 				});
+				// This is to trigger _drawValuelinePath
+				this._nrOfDots = this._inputData.length;
 			}
 
 			_drawTodayLine(x) {
