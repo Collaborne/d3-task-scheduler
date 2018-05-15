@@ -170,9 +170,9 @@ Custom property | Description | Default
 			}
 
 			_computeEnd(deadlines) {
-				const taskIds = Object.keys(this.deadlines);
+				const taskIds = Object.keys(deadlines);
 				const lastTaskId = taskIds[taskIds.length - 1];
-				return this.deadlines[lastTaskId];
+				return deadlines[lastTaskId];
 			}
 
 			_computeTransform(margin) {
