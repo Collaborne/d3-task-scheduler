@@ -308,31 +308,40 @@ Custom property | Description | Default
 				return d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage))(data);
 			}
 
+			_isDayGreaterOrEqualThan(date1, date2) {
+				const dayDate1 = new Date(date1).setHours(0,0,0,0);
+				const dayDate2 = new Date(date2).setHours(0,0,0,0);
+				return dayDate1 >= dayDate2;
+			}
+
 			_drawScatterPlot(inputData) {
 				if (!inputData) {
 					return;
 				}
-				const dragged = d => {
+				const dragged = task => {
 					const todayDate = new Date();
 					// Allow post-poning deadlines only after today
 					// and not after the graph X edge
 					const endMonth = new Date(this.end).getMonth();
 					const expandedEnd = new Date(this.end).setMonth(endMonth + 1.5);
-					if (d.date >= todayDate && d.date < expandedEnd) {
+					// Check date which the dot has been dragged to
+					const futureDate = this.x.invert(d3.event.x);
+					//const lastDotDate = new Date(this._computeEnd(inputData).date);
+					if (this._isDayGreaterOrEqualThan(futureDate, todayDate) && this._isDayGreaterOrEqualThan(expandedEnd, futureDate)) {
 						// Save previous deadline value
-						const oldDeadline = d.date;
+						const oldDeadline = task.date;
 						// Update the date for the dragged task
-						d.date = this.x.invert(d3.event.x);
+						task.date = futureDate;
 						// Save time delta
-						const timeDelta = d.date - oldDeadline;
+						const timeDelta = task.date - oldDeadline;
 						// Move the current dot
 						d3.select(this.$.svg)
-							.select(`.${d.name}`)
-							.attr('cx', this.x(d.date));
+							.select(`.${task.name}`)
+							.attr('cx', this.x(task.date));
 
 						// Trigger schedule recalculation if dot is moved forward
 						if (timeDelta > 0) {
-							const taskIndex = inputData.indexOf(d);
+							const taskIndex = inputData.indexOf(task);
 							this._recalculateSchedule(taskIndex, timeDelta);
 						}
 
