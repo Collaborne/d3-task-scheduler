@@ -12,9 +12,11 @@ The following custom properties are available for styling:
 Custom property | Description | Default
 ----------------|-------------|----------
 `--task-scheduler-background-color` | Color of the background | `#e0e0e0`
+`--task-scheduler-area-color` | Color of the background of the graph under the valueline | `#f6faf6`
 `--task-scheduler-today-line-color` | Color of the line indicating today | `#808080`
 `--task-scheduler-valueline-color` | Color of the line connecting the dots | `#71af26`
 `--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
+`--task-scheduler-font-family` | Font family for the text parts | `sans-serif`
 
 ### Example
 
@@ -35,10 +37,14 @@ Custom property | Description | Default
 			:host {
 				display: inline-block;
 				background-color: var(--task-scheduler-background-color, #e0e0e0);
+				font-family: var(--task-scheduler-font-family, 'sans-serif');
 			}
 			path {
 				stroke-width: 2;
 				fill: none;
+			}
+			.axis {
+				font-family: var(--task-scheduler-font-family, 'sans-serif');
 			}
 			.axis path,
 			.axis line {
@@ -59,16 +65,17 @@ Custom property | Description | Default
 				fill: none;
 				stroke: var(--task-scheduler-valueline-color, #71af26);
 			}
+			#area {
+				fill: var(--task-scheduler-area-color, #f6faf6);
+			}
 			.label {
 				margin-bottom: 16px;
 			}
-
 			.grid line {
 				stroke: var(--task-scheduler-grid-color, #d8d8d8);
 				stroke-opacity: 0.7;
 				shape-rendering: crispEdges;
 			}
-
 			.grid path {
 				stroke-width: 0;
 			}
@@ -78,6 +85,7 @@ Custom property | Description | Default
 			<g transform$="[[_transform]]">
 				<line id="today"></line>
 				<path id="valueLine"></path>
+				<path id="area"></path>
 				<g class="grid"></g>
 				<g id="xAxis"></g>
 				<g id="yAxis"></g>
@@ -166,6 +174,7 @@ Custom property | Description | Default
 					'_drawScatterPlot(_inputData)',
 					'_drawLabels(_inputData)',
 					'_drawValuelinePath(_inputData, _nrOfDots)',
+					'_drawColouredArea(_inputData, _graphHeight)',
 				];
 			}
 
@@ -215,7 +224,7 @@ Custom property | Description | Default
 			}
 
 			_drawYAxis(y) {
-				const yAxis = d3.axisLeft(y);
+				const yAxis = d3.axisLeft(y).tickFormat('');
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
@@ -228,6 +237,11 @@ Custom property | Description | Default
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
 					.attr('d', this._valueline(inputData));
+			}
+
+			_drawColouredArea(inputData, graphHeight) {
+				const area = d3.area().x(d => this.x(d.date)).y0(this._graphHeight).y1(d => this.y(d.percentage));
+				d3.select(this.$.area).attr('d', area(inputData));
 			}
 
 			_buildInputData(start, end, deadlines) {
@@ -334,6 +348,9 @@ Custom property | Description | Default
 
 						// Redraw dot labels
 						this._redrawLabels();
+
+						// Redraw coloured area below value line
+						this._drawColouredArea(inputData, this._graphHeight);
 					}
 				};
 
