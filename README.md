@@ -9,7 +9,6 @@ To use this element:
 
 ```html
 <d3-task-scheduler
-    width="600"
     height="300"
     start="2018-04-10"
     deadlines='{"http://collaborne.com/schema/1.0/tasks/sensing": "2018-04-25","http://collaborne.com/schema/1.0/tasks/visioning": "2018-05-05","http://collaborne.com/schema/1.0/tasks/prototyping": "2018-05-20","http://collaborne.com/schema/1.0/tasks/scaling": "2018-06-01"}'>

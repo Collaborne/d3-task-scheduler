@@ -22,7 +22,6 @@ Custom property | Description | Default
 
 ```html
 <d3-task-scheduler
-	width="600"
 	height="300"
 	start="2018-01-01"
 	deadlines="{'http://collaborne.com/schema/1.0/tasks/sensing': '2018-01-16','http://collaborne.com/schema/1.0/tasks/visioning': '2018-01-24','http://collaborne.com/schema/1.0/tasks/prototyping': '2018-01-31','http://collaborne.com/schema/1.0/tasks/scaling': '2018-02-08'}">
@@ -121,7 +120,10 @@ Custom property | Description | Default
 					/**
 					* Component width
 					*/
-					width: Number,
+					width: {
+						type: Number,
+						computed: '_computeWidth()'
+					},
 					/**
 					* Component height
 					*/
@@ -176,6 +178,10 @@ Custom property | Description | Default
 					'_drawValuelinePath(_inputData, _nrOfDots)',
 					'_drawColouredArea(_inputData, _graphHeight)',
 				];
+			}
+
+			_computeWidth() {
+				return document.body.clientWidth;
 			}
 
 			_computeEnd(deadlines) {
