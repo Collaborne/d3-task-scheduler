@@ -193,7 +193,7 @@ Custom property | Description | Default
 				return [
 					'_drawXAxis(x)',
 					'_drawYAxis(y)',
-					'_drawTodayLine(x)',
+					'_drawTodayMarker(x)',
 					'_drawXGridlines(x)',
 					'_buildInputData(start, end, deadlines)',
 					'_drawScatterPlot(_inputData)',
@@ -317,15 +317,20 @@ Custom property | Description | Default
 				this._nrOfDots = this._inputData.length;
 			}
 
-			_drawTodayLine(x) {
-				// Add vertical line on today's date
+			_drawTodayMarker(x) {
+				// Add marker to x axis corresponding to today
 				const todayDate = new Date();
-				const todayXCoordinate = x(todayDate);
-				d3.select(this.$.today)
-					.attr('x1', todayXCoordinate)
-					.attr('y1', 0)
-					.attr('x2', todayXCoordinate)
-					.attr('y2', this._graphHeight);
+				// Default dimension for the marker is 30px
+				const imageSize = 30;
+				d3.select(this.$.svg).select('g').selectAll('tod')
+					.data([todayDate])
+					.enter().append('image')
+					.attr('xlink:href', 'https://github.com/mlazzarini/d3-task-scheduler/blob/master/images/marker.png?raw=true')
+					.attr('height', imageSize)
+					.attr('width', imageSize)
+					// The center of the pin is at half of its size
+					.attr('x', d => this.x(d) - (imageSize / 2))
+					.attr('y', this._graphHeight - imageSize);
 			}
 
 			addTooltip(d) {
