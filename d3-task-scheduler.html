@@ -14,7 +14,7 @@ Custom property | Description | Default
 `--task-scheduler-background-color` | Color of the background | `#e0e0e0`
 `--task-scheduler-area-color` | Color of the background of the graph under the valueline | `#f6faf6`
 `--task-scheduler-today-line-color` | Color of the line indicating today | `#808080`
-`--task-scheduler-valueline-color` | Color of the line connecting the dots | `#71af26`
+`--task-scheduler-dots-color` | Color of the dots and the line connecting them | `#71af26`
 `--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
 `--task-scheduler-font-family` | Font family for the text parts | `sans-serif`
 
@@ -62,7 +62,10 @@ Custom property | Description | Default
 			}
 			#valueLine {
 				fill: none;
-				stroke: var(--task-scheduler-valueline-color, #71af26);
+				stroke: var(--task-scheduler-dots-color, #71af26);
+			}
+			circle {
+				fill: var(--task-scheduler-dots-color, #71af26);
 			}
 			#area {
 				fill: var(--task-scheduler-area-color, #f6faf6);
@@ -127,7 +130,10 @@ Custom property | Description | Default
 					/**
 					* Component height
 					*/
-					height: Number,
+					height: {
+						type: Number,
+						computed: '_computeHeight()'
+					},
 					end: {
 						type: String,
 						computed: '_computeEnd(deadlines)'
@@ -182,6 +188,10 @@ Custom property | Description | Default
 
 			_computeWidth() {
 				return document.body.clientWidth;
+			}
+
+			_computeHeight() {
+				return 350;
 			}
 
 			_computeEnd(deadlines) {
@@ -383,20 +393,6 @@ Custom property | Description | Default
 					})
 					.on('mouseover', d => this.addTooltip(d))
 					.on('mouseout', () => this.removeTooltip())
-					.style('fill', d => {
-						switch(d.name){
-							case 'sensing':
-								return 'blue';
-							case 'visioning':
-								return 'red';
-							case 'prototyping':
-								return 'yellow';
-							case 'scaling':
-								return 'green';
-							default:
-								return 'grey';
-						}
-					})
 					.call(d3.drag().on('drag', dragged));
 			}
 
