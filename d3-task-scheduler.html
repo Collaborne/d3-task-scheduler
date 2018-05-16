@@ -13,11 +13,12 @@ Custom property | Description | Default
 ----------------|-------------|----------
 `--task-scheduler-background-color` | Color of the background | `#e0e0e0`
 `--task-scheduler-area-color` | Color of the background of the graph under the valueline | `#f6faf6`
-`--task-scheduler-today-line-color` | Color of the line indicating today | `#808080`
+`--task-scheduler-today-marker-color` | Color of the marker indicating today | `#E30B5C`
 `--task-scheduler-dots-color` | Color of the dots and the line connecting them | `#71af26`
 `--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
-`--task-scheduler-axis-color` | Color of the axis, including axis line, ticks and axis labels | `#666666`
+`--task-scheduler-axis-color` | Color of the axis, including axis line, ticks and labels | `#666666`
 `--task-scheduler-font-family` | Font family for the text parts | `sans-serif`
+`--task-scheduler-label-size` | Font size for graph labels | `8px`
 
 ### Example
 
@@ -56,9 +57,11 @@ Custom property | Description | Default
 			.axis text {
 				fill: var(--task-scheduler-axis-color, #666666);
 			}
-			div.tooltip {
+			.tooltip {
 				position: absolute;
 				text-align: center;
+				fill: var(--task-scheduler-axis-color, #666666);
+				font-size: var(--task-scheduler-label-size, 10px);
 			}
 			#today {
 				stroke-width: 2;
@@ -79,7 +82,8 @@ Custom property | Description | Default
 				fill: var(--task-scheduler-area-color, #f6faf6);
 			}
 			.label {
-				margin-bottom: 16px;
+				fill: var(--task-scheduler-axis-color, #666666);
+				font-size: var(--task-scheduler-label-size, 10px);
 			}
 			.grid line {
 				stroke: var(--task-scheduler-grid-color, #d8d8d8);
@@ -269,6 +273,14 @@ Custom property | Description | Default
 				d3.select(this.$.area).attr('d', area(inputData));
 			}
 
+			_buildNiceTaskName(taskId) {
+				// Display name of the task is expressed ad the last word in the phase id
+				// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
+				const phaseName = taskId.split(/[/ ]+/).pop();
+				// Capitalize first letter
+				return phaseName[0].toUpperCase() + phaseName.slice(1);
+			}
+
 			_buildInputData(start, end, deadlines) {
 				if (!start || !end || !deadlines) {
 					return;
@@ -280,9 +292,7 @@ Custom property | Description | Default
 					// Progress is relative weight of the phase compared to the total project duration
 					const progress = (new Date(phaseDeadline).getTime() - new Date(start).getTime()) / projectTotalDuration;
 					return {
-						// Define name of the element as the last word in the phase id
-						// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
-						name: taskId.split(/[/ ]+/).pop(),
+						name: this._buildNiceTaskName(taskId),
 						taskId,
 						date: parseDate(phaseDeadline),
 						progress,
@@ -314,15 +324,15 @@ Custom property | Description | Default
 
 			addTooltip(d) {
 				const buildTooltipText = d => {
-					const format = d3.timeFormat('%d-%m-%Y');
-					return `${d.name}: ${format(new Date(d.date))}`;
+					const format = d3.timeFormat('%d %B %Y');
+					return `${format(new Date(d.date))}`;
 				};
 				d3.select(this.$.svg).append('text')
 					.attr('class', 'tooltip')
 					.text(buildTooltipText(d))
 					.attr('x', this.x(d.date))
-					// Position tooltip under the dot so that it's readable
-					.attr('y', this.y(d.percentage) + 72);
+					// Position tooltip above the dot so that it's readable
+					.attr('y', this.y(d.percentage) + 16);
 			}
 
 			removeTooltip() {
@@ -421,13 +431,21 @@ Custom property | Description | Default
 					.data(inputData)
 					.enter().append('text')
 					.attr('class', 'label')
+					.attr('x', d => this.x(d.date))
+					.attr('y', d => this.y(d.percentage) + 32)
+					.append('tspan')
+					.attr('dy', 0)
 					.attr('x', d => this.x(d.date) - 16)
-					.attr('y', d => this.y(d.percentage) - 16)
-					.text(d => `${Math.round(d.progress * 100)} %`);
+					.text(d => d.name)
+					.append('tspan')
+					// Offset by 1.2 em
+					.attr('dy', '1.2em')
+					.attr('x', d => this.x(d.date) - 16)
+					.text(d => `${Math.round(d.progress * 100)}% progress`);
 			}
 
 			_redrawLabels() {
-				d3.select(this.$.svg).select('g').selectAll('text.label')
+				d3.select(this.$.svg).select('g').selectAll('text.label tspan')
 					.attr('x', d => this.x(d.date) - 16);
 			}
 
