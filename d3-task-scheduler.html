@@ -67,6 +67,10 @@ Custom property | Description | Default
 			circle {
 				fill: var(--task-scheduler-dots-color, #71af26);
 			}
+			.draggable {
+				stroke: #fff;
+				stroke-width: 2;
+			}
 			#area {
 				fill: var(--task-scheduler-area-color, #f6faf6);
 			}
@@ -383,7 +387,15 @@ Custom property | Description | Default
 					.data(inputData)
 					.enter().append('circle')
 					// Define class of the circle as the phase name
-					.attr('class', d => d.name)
+					// plus 'draggable' to apply different styles
+					.attr('class', d => {
+						let classValue = d.name;
+						const todayDate = new Date();
+						if (this._isDayGreaterOrEqualThan(d.date, todayDate)) {
+							return `${d.name} draggable`;
+						}
+						return d.name;
+					})
 					.attr('r', 8)
 					.attr('cx', d => {
 						return this.x(d.date);
