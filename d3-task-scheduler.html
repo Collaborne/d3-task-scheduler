@@ -248,7 +248,8 @@ Custom property | Description | Default
 			}
 
 			_drawYAxis(y) {
-				const yAxis = d3.axisLeft(y).tickFormat('');
+				const yValues = this._inputData.map(task => task.percentage);
+				const yAxis = d3.axisLeft(y).tickFormat('').tickValues(yValues).tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
