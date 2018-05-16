@@ -13,6 +13,7 @@ Custom property | Description | Default
 ----------------|-------------|----------
 `--task-scheduler-background-color` | Color of the background | `#e0e0e0`
 `--task-scheduler-area-color` | Color of the background of the graph under the valueline | `#f6faf6`
+`--task-scheduler-footer-color` | Color of the background of footer | `#bfbfbf`
 `--task-scheduler-today-marker-color` | Color of the marker indicating today | `#E30B5C`
 `--task-scheduler-dots-color` | Color of the dots and the line connecting them | `#71af26`
 `--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
@@ -93,9 +94,13 @@ Custom property | Description | Default
 			.grid path {
 				stroke-width: 0;
 			}
+			.footer {
+				fill: var(--task-scheduler-footer-color, #bfbfbf);
+			}
 		</style>
 
 		<svg id="svg" width$="[[width]]" height$="[[height]]">
+			<rect class="footer"></rect>
 			<g transform$="[[_transform]]">
 				<path id="area"></path>
 				<line id="today"></line>
@@ -195,6 +200,7 @@ Custom property | Description | Default
 					'_drawLabels(_inputData)',
 					'_drawValuelinePath(_inputData, _nrOfDots)',
 					'_drawColouredArea(_inputData, _graphHeight)',
+					'_drawColouredFooter(width, _graphHeight)',
 				];
 			}
 
@@ -469,6 +475,14 @@ Custom property | Description | Default
 						.tickSize(-this._graphHeight)
 						.tickFormat('')
 					);
+			}
+
+			_drawColouredFooter(width, graphHeight) {
+				d3.select(this.$.svg).select('.footer')
+						.attr('x', 0)
+						.attr('y', graphHeight + this.margin.top)
+						.attr('width', width)
+						.attr('height', this.margin.bottom);
 			}
 		}
 		customElements.define(D3TaskScheduler.is, D3TaskScheduler);
