@@ -16,6 +16,7 @@ Custom property | Description | Default
 `--task-scheduler-today-line-color` | Color of the line indicating today | `#808080`
 `--task-scheduler-dots-color` | Color of the dots and the line connecting them | `#71af26`
 `--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
+`--task-scheduler-axis-color` | Color of the axis, including axis line, ticks and axis labels | `#666666`
 `--task-scheduler-font-family` | Font family for the text parts | `sans-serif`
 
 ### Example
@@ -48,9 +49,12 @@ Custom property | Description | Default
 			.axis path,
 			.axis line {
 				fill: none;
-				stroke: grey;
+				stroke: var(--task-scheduler-axis-color, #666666);
 				stroke-width: 1;
 				shape-rendering: crispEdges;
+			}
+			.axis text {
+				fill: var(--task-scheduler-axis-color, #666666);
 			}
 			div.tooltip {
 				position: absolute;
