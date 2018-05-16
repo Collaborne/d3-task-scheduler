@@ -372,7 +372,6 @@ Custom property | Description | Default
 					const expandedEnd = new Date(this.end).setMonth(endMonth + 1.5);
 					// Check date which the dot has been dragged to
 					const futureDate = this.x.invert(d3.event.x);
-					//const lastDotDate = new Date(this._computeEnd(inputData).date);
 					if (this._isDayGreaterOrEqualThan(futureDate, todayDate) && this._isDayGreaterOrEqualThan(expandedEnd, futureDate)) {
 						// Save previous deadline value
 						const oldDeadline = task.date;
@@ -466,9 +465,15 @@ Custom property | Description | Default
 					// Consider only tasks after the one dragged
 					.filter(item => this._inputData.indexOf(item) > taskIndex)
 					// Move date for them too
-					.map(taskItem => {
+					.forEach(taskItem => {
 						const previousDeadline = new Date(taskItem.date);
-						taskItem.date = new Date(previousDeadline).getTime() + timeDelta;
+						const futureDeadline = new Date(previousDeadline).getTime() + timeDelta;
+						const endMonth = new Date(this.end).getMonth();
+						const expandedEnd = new Date(this.end).setMonth(endMonth + 1.5);
+						// Don't move the dot if it's going after the graph edge
+						if (!this._isDayGreaterOrEqualThan(futureDeadline, expandedEnd)) {
+							taskItem.date = futureDeadline;
+						}
 					});
 			}
 
