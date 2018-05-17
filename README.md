@@ -15,6 +15,21 @@ To use this element:
 </d3-task-scheduler>
 ```
 
+## Start the demo
+Clone the repo:
+```
+git clone https://github.com/mlazzarini/d3-task-scheduler.git
+```
+
+Then, run:
+```
+bower install
+```
+and to start the demo:
+```
+polymer serve
+```
+
 ## License
 
     This software is licensed under the Apache 2 license, quoted below.
