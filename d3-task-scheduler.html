@@ -364,10 +364,16 @@ Custom property                       | Description                             
 					(data);
 			}
 
-			_isDayGreaterOrEqualThan(date1, date2) {
+			_isAfter(date1, date2) {
 				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
 				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
-				return dayDate1 >= dayDate2;
+				return dayDate1 > dayDate2;
+			}
+
+			_isEqual(date1, date2) {
+				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
+				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
+				return dayDate1 === dayDate2;
 			}
 
 			_drawScatterPlot(inputData) {
@@ -376,13 +382,30 @@ Custom property                       | Description                             
 				}
 				const dragged = task => {
 					const todayDate = new Date();
-					// Allow post-poning deadlines only after today
-					// and not after the graph X edge
-					const endMonth = new Date(this.end).getMonth();
-					const expandedEnd = new Date(this.end).setMonth(endMonth + 1.5);
+
+					const index = inputData.indexOf(task);
+					// Dates can only be moved between the surrounding dots
+					let minDate;
+					if (index > 0) {
+						minDate = inputData[index -1].date;
+					} else {
+						minDate = this.start;
+					}
+
+					let maxDate;
+					if (index < inputData.length - 1) {
+						// Only allow moving until the next task
+						maxDate = inputData[index + 1].date;
+					} else {
+						// Allow post-poning deadlines only after today
+						// and not after the graph X edge
+						const endMonth = new Date(this.end).getMonth();
+						maxDate = new Date(this.end).setMonth(endMonth + 1.5);
+					}
+
 					// Check date which the dot has been dragged to
 					const futureDate = this.x.invert(d3.event.x);
-					if (this._isDayGreaterOrEqualThan(futureDate, todayDate) && this._isDayGreaterOrEqualThan(expandedEnd, futureDate)) {
+					if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate)) && this._isAfter(futureDate, minDate) && this._isAfter(maxDate, futureDate)) {
 						// Update the date for the dragged task
 						task.date = futureDate;
 						// Move the current dot
@@ -408,7 +431,7 @@ Custom property                       | Description                             
 					// plus 'draggable' to apply different styles
 					.attr('class', d => {
 						const todayDate = new Date();
-						if (this._isDayGreaterOrEqualThan(d.date, todayDate)) {
+						if (this._isAfter(d.date, todayDate)) {
 							return `${d.name} draggable`;
 						}
 						return d.name;
