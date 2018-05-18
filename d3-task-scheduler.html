@@ -130,9 +130,9 @@ Custom property                       | Description                             
 			static get properties() {
 				return {
 					/**
-					* Object that maps task name to scheduled deadline
+					* Array of tasks
 					*/
-					deadlines: Object,
+					deadlines: Array,
 					/**
 					* String representing the first day of the schedule in the format yyyy-mm-dd
 					*/
@@ -213,9 +213,12 @@ Custom property                       | Description                             
 			}
 
 			_computeEnd(deadlines) {
-				const taskIds = Object.keys(deadlines);
-				const lastTaskId = taskIds[taskIds.length - 1];
-				return deadlines[lastTaskId];
+				if (!deadlines || deadlines.length === 0) {
+					return;
+				}
+
+				const lastDeadline = deadlines[deadlines.length - 1];
+				return lastDeadline.date;
 			}
 
 			_computeTransform(margin) {
@@ -279,28 +282,19 @@ Custom property                       | Description                             
 				d3.select(this.$.area).attr('d', area(inputData));
 			}
 
-			_buildNiceTaskName(taskId) {
-				// Display name of the task is expressed ad the last word in the phase id
-				// eg. for 'http://collaborne.com/schema/1.0/tasks/sensing' extracts name 'sensing'
-				const phaseName = taskId.split(/[/ ]+/).pop();
-				// Capitalize first letter
-				return phaseName[0].toUpperCase() + phaseName.slice(1);
-			}
-
 			_buildInputData(start, end, deadlines) {
 				if (!start || !end || !deadlines) {
 					return;
 				}
 				const projectTotalDuration = new Date(end).getTime() - new Date(start).getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
-				this._inputData = Object.keys(deadlines).map(taskId => {
-					const phaseDeadline = deadlines[taskId];
+				this._inputData = deadlines.map(deadline => {
 					// Progress is relative weight of the phase compared to the total project duration
-					const progress = (new Date(phaseDeadline).getTime() - new Date(start).getTime()) / projectTotalDuration;
+					const progress = (new Date(deadline.date).getTime() - new Date(start).getTime()) / projectTotalDuration;
 					return {
-						name: this._buildNiceTaskName(taskId),
-						taskId,
-						date: parseDate(phaseDeadline),
+						name: deadline.name,
+						taskId: deadline.taskId,
+						date: parseDate(deadline.date),
 						progress,
 						percentage: +(progress * 100)
 					};
