@@ -5,7 +5,7 @@ d3-task-scheduler
 
 To use this element:
 
-`bower install d3-task-scheduler`
+`bower install Collaborne/d3-task-scheduler`
 
 ```html
 <d3-task-scheduler
