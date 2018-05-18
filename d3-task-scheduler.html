@@ -1,6 +1,6 @@
 <!doctype html>
-<link rel='import' href='../polymer/polymer-element.html'>
-<script src='https://d3js.org/d3.v4.min.js'></script>
+<link rel="import" href="../polymer/polymer-element.html">
+<script src="https://d3js.org/d3.v4.min.js"></script>
 
 <!--
 A chart that shows tasks as draggable dots
@@ -9,17 +9,17 @@ A chart that shows tasks as draggable dots
 
 The following custom properties are available for styling:
 
-Custom property | Description | Default
-----------------|-------------|----------
-`--task-scheduler-background-color` | Color of the background | `#e0e0e0`
-`--task-scheduler-area-color` | Color of the background of the graph under the valueline | `#f6faf6`
-`--task-scheduler-footer-color` | Color of the background of footer | `#bfbfbf`
-`--task-scheduler-today-marker-color` | Color of the marker indicating today | `#E30B5C`
-`--task-scheduler-dots-color` | Color of the dots and the line connecting them | `#71af26`
-`--task-scheduler-grid-color` | Color of the grid lines | `#d8d8d8`
-`--task-scheduler-axis-color` | Color of the axis, including axis line, ticks and labels | `#666666`
-`--task-scheduler-font-family` | Font family for the text parts | `sans-serif`
-`--task-scheduler-label-size` | Font size for graph labels | `8px`
+Custom property                       | Description                                              | Default
+--------------------------------------|----------------------------------------------------------|----------
+`--task-scheduler-background-color`   | Color of the background                                  | `#e0e0e0`
+`--task-scheduler-area-color`         | Color of the background of the graph under the valueline | `#f6faf6`
+`--task-scheduler-footer-color`       | Color of the background of footer                        | `#bfbfbf`
+`--task-scheduler-today-marker-color` | Color of the marker indicating today                     | `#E30B5C`
+`--task-scheduler-dots-color`         | Color of the dots and the line connecting them           | `#71af26`
+`--task-scheduler-grid-color`         | Color of the grid lines                                  | `#d8d8d8`
+`--task-scheduler-axis-color`         | Color of the axis, including axis line, ticks and labels | `#666666`
+`--task-scheduler-font-family`        | Font family for the text parts                           | `sans-serif`
+`--task-scheduler-label-size`         | Font size for graph labels                               | `8px`
 
 ### Example
 
@@ -33,20 +33,20 @@ Custom property | Description | Default
 
 @demo demo/index.html
 -->
-<dom-module id='d3-task-scheduler'>
+<dom-module id="d3-task-scheduler">
 	<template>
 		<style>
 			:host {
 				display: inline-block;
 				background-color: var(--task-scheduler-background-color, #e0e0e0);
-				font-family: var(--task-scheduler-font-family, 'sans-serif');
+				font-family: var(--task-scheduler-font-family, "sans-serif");
 			}
 			path {
 				stroke-width: 2;
 				fill: none;
 			}
 			.axis {
-				font-family: var(--task-scheduler-font-family, 'sans-serif');
+				font-family: var(--task-scheduler-font-family, "sans-serif");
 			}
 			.axis path,
 			.axis line {
