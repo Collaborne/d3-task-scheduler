@@ -1,16 +1,37 @@
 <html>
 	<head>
-		<script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-		<link rel="import" href="../bower_components/paper-styles/demo-pages.html">
+		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+		<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+		<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
 		<link rel="import" href="../d3-task-scheduler.html">
 	</head>
 
 	<body>
-		<h2>Task scheduler</h2>
-		<d3-task-scheduler
-			height="300"
-			start="2018-04-10"
-			deadlines='{"http://collaborne.com/schema/1.0/tasks/sensing": "2018-04-25","http://collaborne.com/schema/1.0/tasks/visioning": "2018-05-05","http://collaborne.com/schema/1.0/tasks/prototyping": "2018-05-20","http://collaborne.com/schema/1.0/tasks/scaling": "2018-06-01"}'>
-		</d3-task-scheduler>
+		<div class="vertical-section-container centered">
+			<h2>Task scheduler</h2>
+			<demo-snippet>
+				<template>
+					<dom-bind>
+						<template>
+							<d3-task-scheduler
+								height="300"
+								start="2018-04-10"
+								deadlines="[[deadlines]]">
+							</d3-task-scheduler>
+						</template>
+					</dom-bind>
+
+					<script>
+						const scope = document.querySelector("dom-bind");
+						scope.deadlines = {
+							"http://collaborne.com/schema/1.0/tasks/sensing": "2018-04-25",
+							"http://collaborne.com/schema/1.0/tasks/visioning": "2018-05-05",
+							"http://collaborne.com/schema/1.0/tasks/prototyping": "2018-05-20",
+							"http://collaborne.com/schema/1.0/tasks/scaling": "2018-06-01"
+						};
+					</script>
+				</template>
+			</demo-snippet>
+		</div>
 	</body>
 </html>
