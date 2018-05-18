@@ -408,7 +408,7 @@ Custom property                       | Description                             
 						task.date = futureDate;
 						// Move the current dot
 						d3.select(this.$.svg)
-							.select(`.${task.name}`)
+							.select(`.${task.taskId}`)
 							.attr('cx', this.x(task.date));
 
 						// Redraw line connecting dots
@@ -433,9 +433,9 @@ Custom property                       | Description                             
 					.attr('class', task => {
 						const todayDate = new Date();
 						if (this._isAfter(task.date, todayDate)) {
-							return `${task.name} draggable`;
+							return `${task.taskId} draggable`;
 						}
-						return task.name;
+						return task.taskId;
 					})
 					.attr('r', 8)
 					.attr('cx', task => this.x(task.date))
