@@ -276,9 +276,9 @@ Custom property                       | Description                             
 
 			_drawColouredArea(tasks, graphHeight) {
 				const area = d3.area()
-					.x(d => this.x(d.date))
+					.x(task => this.x(task.date))
 					.y0(graphHeight)
-					.y1(d => this.y(d.percentage));
+					.y1(task => this.y(task.percentage));
 				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
@@ -357,8 +357,8 @@ Custom property                       | Description                             
 
 			_valueline(data) {
 				return d3.line()
-					.x(d => this.x(d.date))
-					.y(d => this.y(d.percentage))
+					.x(task => this.x(task.date))
+					.y(task => this.y(task.percentage))
 					(data);
 			}
 
@@ -430,21 +430,17 @@ Custom property                       | Description                             
 					.enter().append('circle')
 					// Define class of the circle as the phase name
 					// plus 'draggable' to apply different styles
-					.attr('class', d => {
+					.attr('class', task => {
 						const todayDate = new Date();
-						if (this._isAfter(d.date, todayDate)) {
-							return `${d.name} draggable`;
+						if (this._isAfter(task.date, todayDate)) {
+							return `${task.name} draggable`;
 						}
-						return d.name;
+						return task.name;
 					})
 					.attr('r', 8)
-					.attr('cx', d => {
-						return this.x(d.date);
-					})
-					.attr('cy', d => {
-						return this.y(d.percentage);
-					})
-					.on('mouseover', d => this.addTooltip(d))
+					.attr('cx', task => this.x(task.date))
+					.attr('cy', task => this.y(task.percentage))
+					.on('mouseover', task => this.addTooltip(task))
 					.on('mouseout', () => this.removeTooltip())
 					.call(d3.drag().on('drag', dragged));
 			}
@@ -457,17 +453,17 @@ Custom property                       | Description                             
 					.data(tasks)
 					.enter().append('text')
 					.attr('class', 'label')
-					.attr('x', d => this.x(d.date))
-					.attr('y', d => this.y(d.percentage) + 32)
+					.attr('x', task => this.x(task.date))
+					.attr('y', task => this.y(task.percentage) + 32)
 					.append('tspan')
 					.attr('dy', 0)
-					.attr('x', d => this.x(d.date) - 16)
-					.text(d => d.name)
+					.attr('x', task => this.x(task.date) - 16)
+					.text(task => task.name)
 					.append('tspan')
 					// Offset by 1.2 em
 					.attr('dy', '1.2em')
-					.attr('x', d => this.x(d.date) - 16)
-					.text(d => `${Math.round(d.progress * 100)}% progress`);
+					.attr('x', task => this.x(task.date) - 16)
+					.text(task => `${Math.round(task.progress * 100)}% progress`);
 			}
 
 			_updateLabels() {
