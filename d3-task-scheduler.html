@@ -340,7 +340,7 @@ Custom property                       | Description                             
 					.attr('y', graphHeight - imageSize);
 			}
 
-			buildTooltipText(date) {
+			toTooltipText(date) {
 				const format = d3.timeFormat('%d %B %Y');
 				return `${format(new Date(date))}`;
 			};
@@ -348,7 +348,7 @@ Custom property                       | Description                             
 			addTooltip(task) {
 				d3.select(this.$.svg).append('text')
 					.attr('class', 'tooltip')
-					.text(this.buildTooltipText(task.date))
+					.text(this.toTooltipText(task.date))
 					.attr('x', this.x(task.date))
 					// Position tooltip above the dot so that it's readable
 					.attr('y', this.y(task.percentage) + 16);
@@ -360,7 +360,7 @@ Custom property                       | Description                             
 
 			updateTooltip(task) {
 				d3.select(this.$.svg).select('.tooltip')
-					.text(this.buildTooltipText(task.date))
+					.text(this.toTooltipText(task.date))
 					.attr('x', this.x(task.date));
 			}
 
