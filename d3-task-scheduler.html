@@ -415,7 +415,7 @@ Custom property                       | Description                             
 						this._drawValuelinePath(tasks);
 
 						// Redraw dot labels
-						this._redrawLabels();
+						this._updateLabels();
 
 						// Redraw coloured area below value line
 						this._drawColouredArea(tasks, this._graphHeight);
@@ -470,9 +470,9 @@ Custom property                       | Description                             
 					.text(d => `${Math.round(d.progress * 100)}% progress`);
 			}
 
-			_redrawLabels() {
+			_updateLabels() {
 				d3.select(this.$.svg).select('g').selectAll('text.label tspan')
-					.attr('x', d => this.x(d.date) - 16);
+					.attr('x', task => this.x(task.date) - 16);
 			}
 
 			_drawXGridlines(x, graphHeight) {
