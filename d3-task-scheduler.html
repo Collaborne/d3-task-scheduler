@@ -378,19 +378,6 @@ Custom property                       | Description                             
 							.select(`.${task.name}`)
 							.attr('cx', this.x(task.date));
 
-						// Trigger schedule recalculation if dot is moved forward
-						if (timeDelta > 0) {
-							const taskIndex = inputData.indexOf(task);
-							this._recalculateSchedule(taskIndex, timeDelta);
-						}
-
-						// Move also other dots
-						inputData.forEach(taskItem => {
-							d3.select(this.$.svg)
-								.select(`.${taskItem.name}`)
-								.attr('cx', this.x(taskItem.date));
-						});
-
 						// Redraw line connecting dots
 						this._drawValuelinePath(inputData);
 
@@ -451,24 +438,6 @@ Custom property                       | Description                             
 			_redrawLabels() {
 				d3.select(this.$.svg).select('g').selectAll('text.label tspan')
 					.attr('x', d => this.x(d.date) - 16);
-			}
-
-			_recalculateSchedule(taskIndex, timeDelta) {
-				const format = d3.timeFormat('%Y-%m-%d');
-				this._inputData
-					// Consider only tasks after the one dragged
-					.filter(item => this._inputData.indexOf(item) > taskIndex)
-					// Move date for them too
-					.forEach(taskItem => {
-						const previousDeadline = new Date(taskItem.date);
-						const futureDeadline = new Date(previousDeadline).getTime() + timeDelta;
-						const endMonth = new Date(this.end).getMonth();
-						const expandedEnd = new Date(this.end).setMonth(endMonth + 1.5);
-						// Don't move the dot if it's going after the graph edge
-						if (!this._isDayGreaterOrEqualThan(futureDeadline, expandedEnd)) {
-							taskItem.date = futureDeadline;
-						}
-					});
 			}
 
 			_drawXGridlines(x) {
