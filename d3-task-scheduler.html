@@ -187,9 +187,9 @@ Custom property                       | Description                             
 						computed: '_computeTransform(margin)'
 					},
 
-					_inputData: {
+					_tasks: {
 						type: Array,
-						computed: '_computeInputData(start, end, deadlines)',
+						computed: '_computetasks(start, end, deadlines)',
 					},
 				};
 			}
@@ -197,13 +197,13 @@ Custom property                       | Description                             
 			static get observers() {
 				return [
 					'_drawXAxis(x, _graphHeight)',
-					'_drawYAxis(y, _inputData)',
+					'_drawYAxis(y, _tasks)',
 					'_drawTodayMarker(x, _graphHeight)',
 					'_drawXGridlines(x, _graphHeight)',
-					'_drawScatterPlot(_inputData)',
-					'_drawLabels(_inputData)',
-					'_drawValuelinePath(_inputData)',
-					'_drawColouredArea(_inputData, _graphHeight)',
+					'_drawScatterPlot(_tasks)',
+					'_drawLabels(_tasks)',
+					'_drawValuelinePath(_tasks)',
+					'_drawColouredArea(_tasks, _graphHeight)',
 					'_drawColouredFooter(width, _graphHeight)',
 				];
 			}
@@ -269,29 +269,29 @@ Custom property                       | Description                             
 					.call(xAxis);
 			}
 
-			_drawYAxis(y, inputData) {
-				const yValues = inputData.map(task => task.percentage);
+			_drawYAxis(y, tasks) {
+				const yValues = tasks.map(task => task.percentage);
 				const yAxis = d3.axisLeft(y).tickFormat('').tickValues(yValues).tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(inputData) {
+			_drawValuelinePath(tasks) {
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
-					.attr('d', this._valueline(inputData));
+					.attr('d', this._valueline(tasks));
 			}
 
-			_drawColouredArea(inputData, graphHeight) {
+			_drawColouredArea(tasks, graphHeight) {
 				const area = d3.area()
 					.x(d => this.x(d.date))
 					.y0(graphHeight)
 					.y1(d => this.y(d.percentage));
-				d3.select(this.$.area).attr('d', area(inputData));
+				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
-			_computeInputData(start, end, deadlines) {
+			_computetasks(start, end, deadlines) {
 				if (!start || !end || !deadlines) {
 					return;
 				}
@@ -376,26 +376,26 @@ Custom property                       | Description                             
 				return dayDate1 === dayDate2;
 			}
 
-			_drawScatterPlot(inputData) {
-				if (!inputData) {
+			_drawScatterPlot(tasks) {
+				if (!tasks) {
 					return;
 				}
 				const dragged = task => {
 					const todayDate = new Date();
 
-					const index = inputData.indexOf(task);
+					const index = tasks.indexOf(task);
 					// Dates can only be moved between the surrounding dots
 					let minDate;
 					if (index > 0) {
-						minDate = inputData[index -1].date;
+						minDate = tasks[index -1].date;
 					} else {
 						minDate = this.start;
 					}
 
 					let maxDate;
-					if (index < inputData.length - 1) {
+					if (index < tasks.length - 1) {
 						// Only allow moving until the next task
-						maxDate = inputData[index + 1].date;
+						maxDate = tasks[index + 1].date;
 					} else {
 						// Allow post-poning deadlines only after today
 						// and not after the graph X edge
@@ -414,18 +414,18 @@ Custom property                       | Description                             
 							.attr('cx', this.x(task.date));
 
 						// Redraw line connecting dots
-						this._drawValuelinePath(inputData);
+						this._drawValuelinePath(tasks);
 
 						// Redraw dot labels
 						this._redrawLabels();
 
 						// Redraw coloured area below value line
-						this._drawColouredArea(inputData, this._graphHeight);
+						this._drawColouredArea(tasks, this._graphHeight);
 					}
 				};
 
 				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(inputData)
+					.data(tasks)
 					.enter().append('circle')
 					// Define class of the circle as the phase name
 					// plus 'draggable' to apply different styles
@@ -448,12 +448,12 @@ Custom property                       | Description                             
 					.call(d3.drag().on('drag', dragged));
 			}
 
-			_drawLabels(inputData) {
-				if (!inputData) {
+			_drawLabels(tasks) {
+				if (!tasks) {
 					return;
 				}
 				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(inputData)
+					.data(tasks)
 					.enter().append('text')
 					.attr('class', 'label')
 					.attr('x', d => this.x(d.date))
