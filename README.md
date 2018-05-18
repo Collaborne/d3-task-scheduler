@@ -1,4 +1,5 @@
 d3-task-scheduler
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/collaborne/d3-task-scheduler)
 =================
 
 `d3-task-scheduler` is a chart that shows tasks as draggable dots. It accepts as input a schedule as it's modeled by the [tasks-scheduler](https://github.com/Collaborne/tasks-scheduler). The web component is built with [Polymer 2.x](https://www.polymer-project.org) and [D3 v.4](http://d3js.org).
@@ -7,6 +8,16 @@ To use this element:
 
 `bower install Collaborne/d3-task-scheduler`
 
+<!--
+```
+<custom-element-demo>
+  <template>
+    <link rel="import" href="d3-task-scheduler.html">
+    <next-code-block></next-code-block>
+  </template>
+</custom-element-demo>
+```
+-->
 ```html
 <d3-task-scheduler
     height="300"
