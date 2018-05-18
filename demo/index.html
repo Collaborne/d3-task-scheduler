@@ -4,6 +4,17 @@
 		<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
 		<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
 		<link rel="import" href="../d3-task-scheduler.html">
+
+		<script>
+			function toString(date) {
+				return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+			}
+			function inDays(nrDays) {
+				const date = new Date();
+				date.setDate(date.getDate() + nrDays);
+				return toString(date);
+			}
+		</script>
 	</head>
 
 	<body>
@@ -15,7 +26,7 @@
 						<template>
 							<d3-task-scheduler
 								height="300"
-								start="2018-04-10"
+								start="[[start]]"
 								deadlines="[[deadlines]]">
 							</d3-task-scheduler>
 						</template>
@@ -23,26 +34,27 @@
 
 					<script>
 						const scope = document.querySelector('dom-bind');
+						scope.start = inDays(-10);
 						scope.deadlines = [
 							{
 								taskId: 'planning',
 								name: 'Planning',
-								date: '2018-04-25',
+								date: inDays(-4),
 							},
 							{
 								taskId: 'concepting',
 								name: 'Concepting',
-								date: '2018-05-05',
+								date: inDays(12),
 							},
 							{
 								taskId: 'implementation',
 								name: 'Implementation',
-								date: '2018-05-20',
+								date: inDays(30),
 							},
 							{
 								taskId: 'validation',
 								name: 'Validation',
-								date: '2018-06-01',
+								date: inDays(35),
 							},
 						];
 					</script>
