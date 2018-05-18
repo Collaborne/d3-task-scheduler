@@ -189,7 +189,7 @@ Custom property                       | Description                             
 
 					_tasks: {
 						type: Array,
-						computed: '_computetasks(start, end, deadlines)',
+						computed: '_computeTasks(start, end, deadlines)',
 					},
 				};
 			}
@@ -286,7 +286,7 @@ Custom property                       | Description                             
 				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
-			_computetasks(start, end, deadlines) {
+			_computeTasks(start, end, deadlines) {
 				if (!start || !end || !deadlines) {
 					return;
 				}
