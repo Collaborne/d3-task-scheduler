@@ -149,7 +149,7 @@ Custom property                       | Description                             
 					*/
 					height: {
 						type: Number,
-						computed: '_computeHeight()'
+						value: 350,
 					},
 					end: {
 						type: String,
@@ -210,10 +210,6 @@ Custom property                       | Description                             
 
 			_computeWidth() {
 				return document.body.clientWidth;
-			}
-
-			_computeHeight() {
-				return 350;
 			}
 
 			_computeEnd(deadlines) {
