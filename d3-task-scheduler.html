@@ -331,7 +331,8 @@ Custom property                       | Description                             
 				d3.select(this.$.svg).select('g').selectAll('tod')
 					.data([todayDate])
 					.enter().append('image')
-					.attr('xlink:href', 'https://github.com/mlazzarini/d3-task-scheduler/blob/master/images/marker.png?raw=true')
+					// Location icon encoded as base64 SVG
+					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
 					.attr('height', imageSize)
 					.attr('width', imageSize)
 					// The center of the pin is at half of its size
