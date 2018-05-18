@@ -186,22 +186,31 @@ Custom property                       | Description                             
 						type: String,
 						computed: '_computeTransform(margin)'
 					},
+
+					_inputData: {
+						type: Array,
+						computed: '_computeInputData(start, end, deadlines)',
+					},
 				};
 			}
 
 			static get observers() {
 				return [
-					'_drawXAxis(x)',
-					'_drawYAxis(y)',
-					'_drawTodayMarker(x)',
-					'_drawXGridlines(x)',
-					'_buildInputData(start, end, deadlines)',
+					'_drawXAxis(x, _graphHeight)',
+					'_drawYAxis(y, _inputData)',
+					'_drawTodayMarker(x, _graphHeight)',
+					'_drawXGridlines(x, _graphHeight)',
 					'_drawScatterPlot(_inputData)',
 					'_drawLabels(_inputData)',
-					'_drawValuelinePath(_inputData, _nrOfDots)',
+					'_drawValuelinePath(_inputData)',
 					'_drawColouredArea(_inputData, _graphHeight)',
 					'_drawColouredFooter(width, _graphHeight)',
 				];
+			}
+
+			ready() {
+				super.ready();
+				console.log(this.clientWidth);
 			}
 
 			_computeWidth() {
@@ -250,45 +259,45 @@ Custom property                       | Description                             
 					.range([height - margin.top - margin.bottom, 0]);
 			}
 
-			_drawXAxis(x) {
+			_drawXAxis(x, graphHeight) {
 				const xAxis = d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat('%B'));
 				d3.select(this.$.xAxis)
 					.attr('class', 'x axis')
 					// By default x axis is on the upperside
 					// so we need to move it down by the graph height
-					.attr('transform', 'translate(0,' + this._graphHeight + ')')
+					.attr('transform', 'translate(0,' + graphHeight + ')')
 					.call(xAxis);
 			}
 
-			_drawYAxis(y) {
-				const yValues = this._inputData.map(task => task.percentage);
+			_drawYAxis(y, inputData) {
+				const yValues = inputData.map(task => task.percentage);
 				const yAxis = d3.axisLeft(y).tickFormat('').tickValues(yValues).tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(inputData, nrOfDots) {
-				if (!inputData) {
-					return;
-				}
+			_drawValuelinePath(inputData) {
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
 					.attr('d', this._valueline(inputData));
 			}
 
 			_drawColouredArea(inputData, graphHeight) {
-				const area = d3.area().x(d => this.x(d.date)).y0(this._graphHeight).y1(d => this.y(d.percentage));
+				const area = d3.area()
+					.x(d => this.x(d.date))
+					.y0(graphHeight)
+					.y1(d => this.y(d.percentage));
 				d3.select(this.$.area).attr('d', area(inputData));
 			}
 
-			_buildInputData(start, end, deadlines) {
+			_computeInputData(start, end, deadlines) {
 				if (!start || !end || !deadlines) {
 					return;
 				}
 				const projectTotalDuration = new Date(end).getTime() - new Date(start).getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
-				this._inputData = deadlines.map(deadline => {
+				const taskDots = deadlines.map(deadline => {
 					// Progress is relative weight of the phase compared to the total project duration
 					const progress = (new Date(deadline.date).getTime() - new Date(start).getTime()) / projectTotalDuration;
 					return {
@@ -296,22 +305,25 @@ Custom property                       | Description                             
 						taskId: deadline.taskId,
 						date: parseDate(deadline.date),
 						progress,
-						percentage: +(progress * 100)
+						percentage: 100 * progress,
 					};
 				});
 				// Add also one dot representing the start
-				this._inputData.unshift({
+				const startDot = {
 					name: 'start',
 					taskId: 'start',
 					date: new Date(start),
 					progress: 0,
 					percentage: 0,
-				});
-				// This is to trigger _drawValuelinePath
-				this._nrOfDots = this._inputData.length;
+				};
+
+				return [
+					startDot,
+					...taskDots,
+				];
 			}
 
-			_drawTodayMarker(x) {
+			_drawTodayMarker(x, graphHeight) {
 				// Add marker to x axis corresponding to today
 				const todayDate = new Date();
 				// Default dimension for the marker is 30px
@@ -324,7 +336,7 @@ Custom property                       | Description                             
 					.attr('width', imageSize)
 					// The center of the pin is at half of its size
 					.attr('x', d => this.x(d) - (imageSize / 2))
-					.attr('y', this._graphHeight - imageSize);
+					.attr('y', graphHeight - imageSize);
 			}
 
 			addTooltip(d) {
@@ -345,12 +357,15 @@ Custom property                       | Description                             
 			}
 
 			_valueline(data) {
-				return d3.line().x(d => this.x(d.date)).y(d => this.y(d.percentage))(data);
+				return d3.line()
+					.x(d => this.x(d.date))
+					.y(d => this.y(d.percentage))
+					(data);
 			}
 
 			_isDayGreaterOrEqualThan(date1, date2) {
-				const dayDate1 = new Date(date1).setHours(0,0,0,0);
-				const dayDate2 = new Date(date2).setHours(0,0,0,0);
+				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
+				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
 				return dayDate1 >= dayDate2;
 			}
 
@@ -367,12 +382,8 @@ Custom property                       | Description                             
 					// Check date which the dot has been dragged to
 					const futureDate = this.x.invert(d3.event.x);
 					if (this._isDayGreaterOrEqualThan(futureDate, todayDate) && this._isDayGreaterOrEqualThan(expandedEnd, futureDate)) {
-						// Save previous deadline value
-						const oldDeadline = task.date;
 						// Update the date for the dragged task
 						task.date = futureDate;
-						// Save time delta
-						const timeDelta = task.date - oldDeadline;
 						// Move the current dot
 						d3.select(this.$.svg)
 							.select(`.${task.name}`)
@@ -395,7 +406,6 @@ Custom property                       | Description                             
 					// Define class of the circle as the phase name
 					// plus 'draggable' to apply different styles
 					.attr('class', d => {
-						let classValue = d.name;
 						const todayDate = new Date();
 						if (this._isDayGreaterOrEqualThan(d.date, todayDate)) {
 							return `${d.name} draggable`;
@@ -440,12 +450,12 @@ Custom property                       | Description                             
 					.attr('x', d => this.x(d.date) - 16);
 			}
 
-			_drawXGridlines(x) {
+			_drawXGridlines(x, graphHeight) {
 				d3.select(this.$.svg).selectAll('.grid')
-					.attr('transform', 'translate(0,' + this._graphHeight + ')')
+					.attr('transform', 'translate(0,' + graphHeight + ')')
 					.call(d3.axisBottom(x)
 						.ticks(d3.timeMonth)
-						.tickSize(-this._graphHeight)
+						.tickSize(-graphHeight)
 						.tickFormat('')
 					);
 			}
