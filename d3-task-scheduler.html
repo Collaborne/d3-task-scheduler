@@ -340,21 +340,28 @@ Custom property                       | Description                             
 					.attr('y', graphHeight - imageSize);
 			}
 
-			addTooltip(d) {
-				const buildTooltipText = d => {
-					const format = d3.timeFormat('%d %B %Y');
-					return `${format(new Date(d.date))}`;
-				};
+			buildTooltipText(date) {
+				const format = d3.timeFormat('%d %B %Y');
+				return `${format(new Date(date))}`;
+			};
+
+			addTooltip(task) {
 				d3.select(this.$.svg).append('text')
 					.attr('class', 'tooltip')
-					.text(buildTooltipText(d))
-					.attr('x', this.x(d.date))
+					.text(this.buildTooltipText(task.date))
+					.attr('x', this.x(task.date))
 					// Position tooltip above the dot so that it's readable
-					.attr('y', this.y(d.percentage) + 16);
+					.attr('y', this.y(task.percentage) + 16);
 			}
 
 			removeTooltip() {
 				d3.select(this.$.svg).selectAll('.tooltip').remove();
+			}
+
+			updateTooltip(task) {
+				d3.select(this.$.svg).select('.tooltip')
+					.text(this.buildTooltipText(task.date))
+					.attr('x', this.x(task.date));
 			}
 
 			_valueline(data) {
@@ -421,6 +428,9 @@ Custom property                       | Description                             
 
 						// Redraw coloured area below value line
 						this._drawColouredArea(tasks, this._graphHeight);
+
+						// Update tooltip when the dot is dragged
+						this.updateTooltip(task);
 					}
 				};
 
