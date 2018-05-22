@@ -39,7 +39,7 @@ bower install
 ```
 and to start the demo:
 ```
-polymer serve
+npm install -g polymer-cli && polymer serve
 ```
 
 ## License
@@ -59,4 +59,4 @@ polymer serve
     WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
     License for the specific language governing permissions and limitations under
     the License.
-    
+
