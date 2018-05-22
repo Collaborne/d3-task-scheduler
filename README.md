@@ -29,7 +29,7 @@ To use this element:
 ## Start the demo
 Clone the repo:
 ```
-git clone https://github.com/mlazzarini/d3-task-scheduler.git
+git clone https://github.com/Collaborne/d3-task-scheduler
 ```
 
 Then, run:
