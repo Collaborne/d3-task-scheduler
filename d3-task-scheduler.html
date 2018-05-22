@@ -1,5 +1,4 @@
 <!doctype html>
-<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="../polymer/polymer-element.html">
 <script src="../d3/d3.min.js"></script>
 
@@ -42,6 +41,23 @@ Custom property                       | Description                             
 				background-color: var(--task-scheduler-background-color, #e0e0e0);
 				font-family: var(--task-scheduler-font-family, "sans-serif");
 			}
+
+			.svg-container { 
+				display: inline-block;
+				position: relative;
+				width: 100%;
+				padding-bottom: 50%; /* Aspect ratio */
+				vertical-align: middle; 
+				overflow: hidden; 
+			}
+
+			.svg-content { 
+				display: inline-block;
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+
 			path {
 				stroke-width: 2;
 				fill: none;
@@ -100,25 +116,28 @@ Custom property                       | Description                             
 			}
 		</style>
 
-		<svg id="svg" width$="[[width]]" height$="[[height]]">
-			<rect class="footer"></rect>
-			<g transform$="[[_transform]]">
-				<path id="area"></path>
-				<line id="today"></line>
-				<path id="valueLine"></path>
-				<g class="grid"></g>
-				<g id="xAxis"></g>
-				<g id="yAxis"></g>
-			</g>
-		</svg>
+		<div class="svg-container">
+			<svg id="svg" viewBox="0 0 1000 500" preserveAspectRatio="xMinYMin meet" class="svg-content">
+				<rect class="footer"></rect>
+				<g transform$="[[_transform]]">
+					<path id="area"></path>
+					<line id="today"></line>
+					<path id="valueLine"></path>
+					<g class="grid"></g>
+					<g id="xAxis"></g>
+					<g id="yAxis"></g>
+				</g>
+			</svg>
+		</div>
 	</template>
 
 	<script>
+
 		/**
 		 * @customElement
 		 * @polymer
 		 */
-		class D3TaskScheduler extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior], Polymer.Element) {
+		class D3TaskScheduler extends Polymer.Element {
 
 			static get is() {
 				return 'd3-task-scheduler';
@@ -141,13 +160,16 @@ Custom property                       | Description                             
 					/**
 					* Component width
 					*/
-					width: Number,
+					width: {
+						type: Number,
+						value: 1000,
+					},
 					/**
 					* Component height
 					*/
 					height: {
 						type: Number,
-						value: 350,
+						value: 500,
 					},
 					end: {
 						type: String,
@@ -189,6 +211,11 @@ Custom property                       | Description                             
 						type: Array,
 						computed: '_computeTasks(start, end, deadlines)',
 					},
+
+					_initialized: {
+						type: Boolean,
+						value: false,
+					}
 				};
 			}
 
@@ -204,16 +231,6 @@ Custom property                       | Description                             
 					'_drawColouredArea(x, y, _tasks, _graphHeight)',
 					'_drawColouredFooter(width, _graphHeight, margin)',
 				];
-			}
-
-			ready() {
-				super.ready();
-
-				this.addEventListener('iron-resize', this._onResize.bind(this));
-			}
-
-			_onResize() {
-				this.width = this.clientWidth;
 			}
 
 			_computeEnd(deadlines) {
@@ -238,7 +255,7 @@ Custom property                       | Description                             
 			}
 
 			_computeXRange(start, end, width, margin) {
-				if (!start || !width || !margin) {
+				if (!start || !width || !margin || this._initialized) {
 					return;
 				}
 
@@ -343,26 +360,27 @@ Custom property                       | Description                             
 			}
 
 			_drawTodayMarker(x, graphHeight) {
-				if (!x) {
+				if (!x || this._initialized) {
 					return;
 				}
+
+				this._initialized = true;
 
 				// Add marker to x axis corresponding to today
 				const todayDate = new Date();
 				// Default dimension for the marker is 30px
 				const imageSize = 30;
-				const nodes = d3.select(this.$.svg).select('g').selectAll('tod');
-				nodes
-					.data([todayDate])
-					.enter().append('image')
+				const children = d3.select(this.$.svg).select('g').selectAll('tod').data([todayDate]);
+				children.enter().append('image')
 					.attr('class', 'tod')
 					// Location icon encoded as base64 SVG
 					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
 					.attr('height', imageSize)
 					.attr('width', imageSize)
 					// The center of the pin is at half of its size
-					.attr('x', date => this.x(date) - (imageSize / 2))
+					.attr('x', date => x(date) - (imageSize / 2))
 					.attr('y', graphHeight - imageSize);
+				children.exit().remove();
 			}
 
 			toTooltipText(date) {
