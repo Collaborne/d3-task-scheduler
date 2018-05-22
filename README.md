@@ -1,4 +1,5 @@
 d3-task-scheduler
+[![Build Status](https://travis-ci.org/Collaborne/d3-task-scheduler.svg?branch=master)](https://travis-ci.org/Collaborne/d3-task-scheduler)
 [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/collaborne/d3-task-scheduler)
 =================
 
