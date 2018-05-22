@@ -7,10 +7,13 @@
 
 		<script>
 			function toString(date) {
-				return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+				const year = date.getFullYear();
+				const month = (date.getMonth() + 1).toString().padStart(2, '0');
+				const day = date.getDate().toString().padStart(2, '0');
+				return `${year}-${month}-${day}`;
 			}
-			function inDays(nrDays) {
-				const date = new Date();
+			function inDays(start, nrDays) {
+				const date = new Date(start);
 				date.setDate(date.getDate() + nrDays);
 				return toString(date);
 			}
@@ -29,36 +32,38 @@
 									width: 100%;
 								}
 							</style>
+
+							Start: <input value="{{start::input}}" type="date"/>
 							<d3-task-scheduler
 								start="[[start]]"
-								deadlines="[[deadlines]]">
+								deadlines="[[computeDeadlines(start)]]">
 							</d3-task-scheduler>
 						</template>
 					</dom-bind>
 
 					<script>
 						const scope = document.querySelector('dom-bind');
-						scope.start = inDays(-10);
-						scope.deadlines = [
+						scope.start = inDays(toString(new Date()), -10);
+						scope.computeDeadlines = start => [
 							{
 								taskId: 'planning',
 								name: 'Planning',
-								date: inDays(-4),
+								date: inDays(start, 14),
 							},
 							{
 								taskId: 'concepting',
 								name: 'Concepting',
-								date: inDays(23),
+								date: inDays(start, 33),
 							},
 							{
 								taskId: 'implementation',
 								name: 'Implementation',
-								date: inDays(60),
+								date: inDays(start, 70),
 							},
 							{
 								taskId: 'validation',
 								name: 'Validation',
-								date: inDays(70),
+								date: inDays(start, 80),
 							},
 						];
 					</script>
