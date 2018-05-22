@@ -1,4 +1,5 @@
 <!doctype html>
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="../polymer/polymer-element.html">
 <script src="../d3/d3.min.js"></script>
 
@@ -117,7 +118,7 @@ Custom property                       | Description                             
 		 * @customElement
 		 * @polymer
 		 */
-		class D3TaskScheduler extends Polymer.Element {
+		class D3TaskScheduler extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior], Polymer.Element) {
 
 			static get is() {
 				return 'd3-task-scheduler';
@@ -140,10 +141,7 @@ Custom property                       | Description                             
 					/**
 					* Component width
 					*/
-					width: {
-						type: Number,
-						computed: '_computeWidth()'
-					},
+					width: Number,
 					/**
 					* Component height
 					*/
@@ -200,16 +198,22 @@ Custom property                       | Description                             
 					'_drawYAxis(y, _tasks)',
 					'_drawTodayMarker(x, _graphHeight)',
 					'_drawXGridlines(x, _graphHeight)',
-					'_drawScatterPlot(_tasks)',
-					'_drawLabels(_tasks)',
-					'_drawValuelinePath(_tasks)',
-					'_drawColouredArea(_tasks, _graphHeight)',
-					'_drawColouredFooter(width, _graphHeight)',
+					'_drawScatterPlot(x, y, _tasks)',
+					'_drawLabels(x, y, _tasks)',
+					'_drawValuelinePath(x, y, _tasks)',
+					'_drawColouredArea(x, y, _tasks, _graphHeight)',
+					'_drawColouredFooter(width, _graphHeight, margin)',
 				];
 			}
 
-			_computeWidth() {
-				return document.body.clientWidth;
+			ready() {
+				super.ready();
+
+				this.addEventListener('iron-resize', this._onResize.bind(this));
+			}
+
+			_onResize() {
+				this.width = this.clientWidth;
 			}
 
 			_computeEnd(deadlines) {
@@ -234,6 +238,10 @@ Custom property                       | Description                             
 			}
 
 			_computeXRange(start, end, width, margin) {
+				if (!start || !width || !margin) {
+					return;
+				}
+
 				// Expand time limit for the end of 1 month and a half, so that last dot is 
 				// draggable after the scheduled end of the project
 				const endMonth = new Date(end).getMonth();
@@ -245,22 +253,34 @@ Custom property                       | Description                             
 			}
 
 			_computeYRange(height, margin) {
+				if (!height || !margin) {
+					return;
+				}
+
 				return d3.scaleLinear()
 					.domain([0, 100])
 					.range([height - margin.top - margin.bottom, 0]);
 			}
 
 			_drawXAxis(x, graphHeight) {
+				if (!x) {
+					return;
+				}
+
 				const xAxis = d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat('%B'));
 				d3.select(this.$.xAxis)
 					.attr('class', 'x axis')
 					// By default x axis is on the upperside
 					// so we need to move it down by the graph height
-					.attr('transform', 'translate(0,' + graphHeight + ')')
+					.attr('transform', `translate(0,${graphHeight})`)
 					.call(xAxis);
 			}
 
 			_drawYAxis(y, tasks) {
+				if (!y) {
+					return;
+				}
+
 				const yValues = tasks.map(task => task.percentage);
 				const yAxis = d3.axisLeft(y).tickFormat('').tickValues(yValues).tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
@@ -268,17 +288,25 @@ Custom property                       | Description                             
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(tasks) {
+			_drawValuelinePath(x, y, tasks) {
+				if (!x || !y) {
+					return;
+				}
+
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
-					.attr('d', this._valueline(tasks));
+					.attr('d', this._valueline(x, y, tasks));
 			}
 
-			_drawColouredArea(tasks, graphHeight) {
+			_drawColouredArea(x, y, tasks, graphHeight) {
+				if (!x || !y) {
+					return;
+				}
+
 				const area = d3.area()
-					.x(task => this.x(task.date))
+					.x(task => x(task.date))
 					.y0(graphHeight)
-					.y1(task => this.y(task.percentage));
+					.y1(task => y(task.percentage));
 				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
@@ -315,19 +343,25 @@ Custom property                       | Description                             
 			}
 
 			_drawTodayMarker(x, graphHeight) {
+				if (!x) {
+					return;
+				}
+
 				// Add marker to x axis corresponding to today
 				const todayDate = new Date();
 				// Default dimension for the marker is 30px
 				const imageSize = 30;
-				d3.select(this.$.svg).select('g').selectAll('tod')
+				const nodes = d3.select(this.$.svg).select('g').selectAll('tod');
+				nodes
 					.data([todayDate])
 					.enter().append('image')
+					.attr('class', 'tod')
 					// Location icon encoded as base64 SVG
 					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
 					.attr('height', imageSize)
 					.attr('width', imageSize)
 					// The center of the pin is at half of its size
-					.attr('x', d => this.x(d) - (imageSize / 2))
+					.attr('x', date => this.x(date) - (imageSize / 2))
 					.attr('y', graphHeight - imageSize);
 			}
 
@@ -355,10 +389,10 @@ Custom property                       | Description                             
 					.attr('x', this.x(task.date));
 			}
 
-			_valueline(data) {
+			_valueline(x, y, data) {
 				return d3.line()
-					.x(task => this.x(task.date))
-					.y(task => this.y(task.percentage))
+					.x(task => x(task.date))
+					.y(task => y(task.percentage))
 					(data);
 			}
 
@@ -374,8 +408,8 @@ Custom property                       | Description                             
 				return dayDate1 === dayDate2;
 			}
 
-			_drawScatterPlot(tasks) {
-				if (!tasks) {
+			_drawScatterPlot(x, y, tasks) {
+				if (!x || !y || !tasks) {
 					return;
 				}
 				const dragged = task => {
@@ -412,13 +446,13 @@ Custom property                       | Description                             
 							.attr('cx', this.x(task.date));
 
 						// Redraw line connecting dots
-						this._drawValuelinePath(tasks);
+						this._drawValuelinePath(x, y, tasks);
 
 						// Redraw dot labels
 						this._updateLabels();
 
 						// Redraw coloured area below value line
-						this._drawColouredArea(tasks, this._graphHeight);
+						this._drawColouredArea(this.x, this.y, tasks, this._graphHeight);
 
 						// Update tooltip when the dot is dragged
 						this.updateTooltip(task);
@@ -438,31 +472,31 @@ Custom property                       | Description                             
 						return task.taskId;
 					})
 					.attr('r', 8)
-					.attr('cx', task => this.x(task.date))
-					.attr('cy', task => this.y(task.percentage))
+					.attr('cx', task => x(task.date))
+					.attr('cy', task => y(task.percentage))
 					.on('mouseover', task => this.addTooltip(task))
 					.on('mouseout', () => this.removeTooltip())
 					.call(d3.drag().on('drag', dragged));
 			}
 
-			_drawLabels(tasks) {
-				if (!tasks) {
+			_drawLabels(x, y, tasks) {
+				if (!x || !y || !tasks) {
 					return;
 				}
 				d3.select(this.$.svg).select('g').selectAll('dot')
 					.data(tasks)
 					.enter().append('text')
 					.attr('class', 'label')
-					.attr('x', task => this.x(task.date))
-					.attr('y', task => this.y(task.percentage) + 32)
+					.attr('x', task => x(task.date))
+					.attr('y', task => y(task.percentage) + 32)
 					.append('tspan')
 					.attr('dy', 0)
-					.attr('x', task => this.x(task.date) - 16)
+					.attr('x', task => x(task.date) - 16)
 					.text(task => task.name)
 					.append('tspan')
 					// Offset by 1.2 em
 					.attr('dy', '1.2em')
-					.attr('x', task => this.x(task.date) - 16)
+					.attr('x', task => x(task.date) - 16)
 					.text(task => `${Math.round(task.progress * 100)}% progress`);
 			}
 
@@ -472,6 +506,10 @@ Custom property                       | Description                             
 			}
 
 			_drawXGridlines(x, graphHeight) {
+				if (!x) {
+					return;
+				}
+
 				d3.select(this.$.svg).selectAll('.grid')
 					.attr('transform', 'translate(0,' + graphHeight + ')')
 					.call(d3.axisBottom(x)
@@ -481,12 +519,12 @@ Custom property                       | Description                             
 					);
 			}
 
-			_drawColouredFooter(width, graphHeight) {
+			_drawColouredFooter(width, graphHeight, margin) {
 				d3.select(this.$.svg).select('.footer')
 						.attr('x', 0)
-						.attr('y', graphHeight + this.margin.top)
+						.attr('y', graphHeight + margin.top)
 						.attr('width', width)
-						.attr('height', this.margin.bottom);
+						.attr('height', margin.bottom);
 			}
 		}
 		customElements.define(D3TaskScheduler.is, D3TaskScheduler);
