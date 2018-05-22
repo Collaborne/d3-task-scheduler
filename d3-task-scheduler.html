@@ -26,7 +26,6 @@ Custom property                       | Description                             
 ```html
 <d3-task-scheduler
 	height="300"
-	start="2018-01-01"
 	deadlines="[[deadlines]]">
 </d3-task-scheduler>
 ```
@@ -122,6 +121,7 @@ Custom property                       | Description                             
 				<g transform$="[[_transform]]">
 					<path id="area"></path>
 					<line id="today"></line>
+					<tod class="grid"></tod>
 					<path id="valueLine"></path>
 					<g class="grid"></g>
 					<g id="xAxis"></g>
@@ -174,7 +174,7 @@ Custom property                       | Description                             
 					// Functions to calculate ranges
 					x: {
 						type: Number,
-						computed: '_computeXRange(width, margin, _tasks)'
+						computed: '_computeXRange(width, _graphWidth, _tasks)'
 					},
 					y: {
 						type: Number,
@@ -183,6 +183,10 @@ Custom property                       | Description                             
 					_graphHeight: {
 						type: Number,
 						computed: '_computeGraphHeight(height, margin)'
+					},
+					_graphWidth: {
+						type: Number,
+						computed: '_computeGraphWidth(width, margin)'
 					},
 					_transform: {
 						type: String,
@@ -193,11 +197,6 @@ Custom property                       | Description                             
 						type: Array,
 						computed: '_computeTasks(deadlines)',
 					},
-
-					_initialized: {
-						type: Boolean,
-						value: false,
-					}
 				};
 			}
 
@@ -227,19 +226,23 @@ Custom property                       | Description                             
 				return height - margin.top - margin.bottom;
 			}
 
-			_computeXRange(width, margin, tasks) {
-				if (!width || !margin || this._initialized || !tasks) {
+			_computeXRange(width, graphWidth, tasks) {
+				if (!width || !graphWidth || !tasks) {
 					return;
 				}
 
-				const firstDeadline = new Date(tasks[0].date);
+				const firstDate = new Date(tasks[0].date);
+				const lastDate = new Date(tasks[tasks.length - 1].date);
+				const projectDuration = lastDate.getTime() - firstDate.getTime();
+				const projectDurationInDays = projectDuration / 1000 / 60 / 60 / 24;
+
+				const border = projectDurationInDays / 5;
+				const minDate = firstDate.setDate(firstDate.getDate() - border);
+				const maxDate = lastDate.setDate(lastDate.getDate() + border);
+
 				return d3.scaleTime()
-					.domain([firstDeadline, d3.max(tasks, task => {
-						const date = new Date(task.date);
-						// X edge is the maximum date between today and end of the project plus 1.5 months
-						return new Date(date).setMonth(date.getMonth() + 1.5);
-					})])
-					.range([0, width - margin.left - margin.right]);
+					.domain([minDate, maxDate])
+					.range([0, graphWidth]);
 			}
 
 			_computeYRange(height, margin) {
@@ -267,7 +270,7 @@ Custom property                       | Description                             
 			}
 
 			_drawYAxis(y, tasks) {
-				if (!y) {
+				if (!y || !tasks) {
 					return;
 				}
 
@@ -329,18 +332,17 @@ Custom property                       | Description                             
 			}
 
 			_drawTodayMarker(x, graphHeight) {
-				if (!x || this._initialized) {
+				if (!x) {
 					return;
 				}
 
-				this._initialized = true;
-
 				// Add marker to x axis corresponding to today
-				const todayDate = new Date();
+				const todayDate = new Date().setHours(0, 0, 0, 0);
 				// Default dimension for the marker is 30px
 				const imageSize = 30;
-				const children = d3.select(this.$.svg).select('g').selectAll('tod').data([todayDate])
-					.attr('class', 'tod')
+				const children = d3.select(this.$.svg).select('g').selectAll('tod')
+					.data([todayDate])
+					.enter().append('image')
 					// Location icon encoded as base64 SVG
 					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
 					.attr('height', imageSize)
@@ -365,7 +367,7 @@ Custom property                       | Description                             
 			}
 
 			removeTooltip() {
-				d3.select(this.$.svg).selectAll('.tooltip').remove();
+				d3.select(this.$.svg).select('.tooltip').remove();
 			}
 
 			updateTooltip(task) {
@@ -399,7 +401,7 @@ Custom property                       | Description                             
 					if (index > 0) {
 						minDate = tasks[index -1].date;
 					} else {
-						minDate = this.start;
+						minDate = x.invert(0);
 					}
 
 					let maxDate;
@@ -409,19 +411,27 @@ Custom property                       | Description                             
 					} else {
 						// Allow post-poning deadlines only after today
 						// and not after the graph X edge
-						const endMonth = new Date(this.end).getMonth();
-						maxDate = new Date(this.end).setMonth(endMonth + 1.5);
+						maxDate = x.invert(this._graphWidth);
 					}
 
 					// Check date which the dot has been dragged to
 					const futureDate = this.x.invert(d3.event.x);
-					if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate)) && this._isAfter(futureDate, minDate) && this._isAfter(maxDate, futureDate)) {
+					if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate))
+						&& this._isAfter(futureDate, minDate)
+						&& (!maxDate || this._isAfter(maxDate, futureDate))) {
 						// Update the date for the dragged task
 						task.date = futureDate;
 						// Move the current dot
 						d3.select(this.$.svg)
 							.select(`.${task.taskId}`)
 							.attr('cx', this.x(task.date));
+
+						this.dispatchEvent(new CustomEvent('deadline-changed', {
+							detail: {
+								taskId: task.id,
+								date: futureDate,
+							},
+						}));
 
 						// Redraw line connecting dots
 						this._drawValuelinePath(x, y, tasks);
