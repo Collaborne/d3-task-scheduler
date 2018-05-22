@@ -171,10 +171,6 @@ Custom property                       | Description                             
 						type: Number,
 						value: 500,
 					},
-					end: {
-						type: String,
-						computed: '_computeEnd(deadlines)'
-					},
 					margin: {
 						type: Object,
 						value: {
@@ -187,7 +183,7 @@ Custom property                       | Description                             
 					// Functions to calculate ranges
 					x: {
 						type: Number,
-						computed: '_computeXRange(start, end, width, margin)'
+						computed: '_computeXRange(start, width, margin, _tasks)'
 					},
 					y: {
 						type: Number,
@@ -209,7 +205,7 @@ Custom property                       | Description                             
 
 					_tasks: {
 						type: Array,
-						computed: '_computeTasks(start, end, deadlines)',
+						computed: '_computeTasks(start, deadlines)',
 					},
 
 					_initialized: {
@@ -233,15 +229,6 @@ Custom property                       | Description                             
 				];
 			}
 
-			_computeEnd(deadlines) {
-				if (!deadlines || deadlines.length === 0) {
-					return;
-				}
-
-				const lastDeadline = deadlines[deadlines.length - 1];
-				return lastDeadline.date;
-			}
-
 			_computeTransform(margin) {
 				return `translate(${margin.left}, ${margin.top})`;
 			}
@@ -254,18 +241,17 @@ Custom property                       | Description                             
 				return height - margin.top - margin.bottom;
 			}
 
-			_computeXRange(start, end, width, margin) {
-				if (!start || !width || !margin || this._initialized) {
+			_computeXRange(start, width, margin, tasks) {
+				if (!start || !width || !margin || this._initialized || !tasks) {
 					return;
 				}
 
-				// Expand time limit for the end of 1 month and a half, so that last dot is 
-				// draggable after the scheduled end of the project
-				const endMonth = new Date(end).getMonth();
-				// X edge is the maximum date between today and end of the project plus 1.5 months
-				const xEdge = Math.max(new Date(), new Date(end).setMonth(endMonth + 1.5));
 				return d3.scaleTime()
-					.domain([new Date(start), xEdge])
+					.domain([new Date(start), d3.max(tasks, task => {
+						const date = new Date(task.date);
+						// X edge is the maximum date between today and end of the project plus 1.5 months
+						return new Date(date).setMonth(date.getMonth() + 1.5);
+					})])
 					.range([0, width - margin.left - margin.right]);
 			}
 
@@ -327,11 +313,14 @@ Custom property                       | Description                             
 				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
-			_computeTasks(start, end, deadlines) {
-				if (!start || !end || !deadlines) {
+			_computeTasks(start, deadlines) {
+				if (!start || !deadlines) {
 					return;
 				}
-				const projectTotalDuration = new Date(end).getTime() - new Date(start).getTime();
+
+				const lastDeadline = deadlines[deadlines.length - 1];
+
+				const projectTotalDuration = new Date(lastDeadline.date).getTime() - new Date(start).getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
 				const taskDots = deadlines.map(deadline => {
 					// Progress is relative weight of the phase compared to the total project duration
@@ -370,8 +359,7 @@ Custom property                       | Description                             
 				const todayDate = new Date();
 				// Default dimension for the marker is 30px
 				const imageSize = 30;
-				const children = d3.select(this.$.svg).select('g').selectAll('tod').data([todayDate]);
-				children.enter().append('image')
+				const children = d3.select(this.$.svg).select('g').selectAll('tod').data([todayDate])
 					.attr('class', 'tod')
 					// Location icon encoded as base64 SVG
 					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
@@ -380,7 +368,6 @@ Custom property                       | Description                             
 					// The center of the pin is at half of its size
 					.attr('x', date => x(date) - (imageSize / 2))
 					.attr('y', graphHeight - imageSize);
-				children.exit().remove();
 			}
 
 			toTooltipText(date) {
