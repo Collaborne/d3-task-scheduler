@@ -149,10 +149,6 @@ Custom property                       | Description                             
 					*/
 					deadlines: Array,
 					/**
-					* String representing the first day of the schedule in the format yyyy-mm-dd
-					*/
-					start: String,
-					/**
 					* Component width
 					*/
 					width: {
@@ -178,7 +174,7 @@ Custom property                       | Description                             
 					// Functions to calculate ranges
 					x: {
 						type: Number,
-						computed: '_computeXRange(start, width, margin, _tasks)'
+						computed: '_computeXRange(width, margin, _tasks)'
 					},
 					y: {
 						type: Number,
@@ -195,7 +191,7 @@ Custom property                       | Description                             
 
 					_tasks: {
 						type: Array,
-						computed: '_computeTasks(start, deadlines)',
+						computed: '_computeTasks(deadlines)',
 					},
 
 					_initialized: {
@@ -231,13 +227,14 @@ Custom property                       | Description                             
 				return height - margin.top - margin.bottom;
 			}
 
-			_computeXRange(start, width, margin, tasks) {
-				if (!start || !width || !margin || this._initialized || !tasks) {
+			_computeXRange(width, margin, tasks) {
+				if (!width || !margin || this._initialized || !tasks) {
 					return;
 				}
 
+				const firstDeadline = new Date(tasks[0].date);
 				return d3.scaleTime()
-					.domain([new Date(start), d3.max(tasks, task => {
+					.domain([firstDeadline, d3.max(tasks, task => {
 						const date = new Date(task.date);
 						// X edge is the maximum date between today and end of the project plus 1.5 months
 						return new Date(date).setMonth(date.getMonth() + 1.5);
@@ -308,18 +305,19 @@ Custom property                       | Description                             
 				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
-			_computeTasks(start, deadlines) {
-				if (!start || !deadlines) {
+			_computeTasks(deadlines) {
+				if (!deadlines) {
 					return;
 				}
 
-				const lastDeadline = deadlines[deadlines.length - 1];
+				const firstDeadline = new Date(deadlines[0].date);
+				const lastDeadline = new Date(deadlines[deadlines.length - 1].date);
 
-				const projectTotalDuration = new Date(lastDeadline.date).getTime() - new Date(start).getTime();
+				const projectTotalDuration = lastDeadline.getTime() - firstDeadline.getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
-				const taskDots = deadlines.map(deadline => {
+				return deadlines.map(deadline => {
 					// Progress is relative weight of the phase compared to the total project duration
-					const progress = (new Date(deadline.date).getTime() - new Date(start).getTime()) / projectTotalDuration;
+					const progress = (new Date(deadline.date).getTime() - firstDeadline.getTime()) / projectTotalDuration;
 					return {
 						name: deadline.name,
 						taskId: deadline.taskId,
@@ -328,19 +326,6 @@ Custom property                       | Description                             
 						percentage: 100 * progress,
 					};
 				});
-				// Add also one dot representing the start
-				const startDot = {
-					name: 'start',
-					taskId: 'start',
-					date: new Date(start),
-					progress: 0,
-					percentage: 0,
-				};
-
-				return [
-					startDot,
-					...taskDots,
-				];
 			}
 
 			_drawTodayMarker(x, graphHeight) {

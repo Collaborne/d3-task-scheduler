@@ -46,6 +46,11 @@
 						scope.start = inDays(toString(new Date()), -10);
 						scope.computeDeadlines = start => [
 							{
+								taskId: 'start',
+								name: 'Start',
+								date: scope.start,
+							},
+							{
 								taskId: 'planning',
 								name: 'Planning',
 								date: inDays(start, 14),
