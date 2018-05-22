@@ -189,11 +189,6 @@ Custom property                       | Description                             
 						type: Number,
 						computed: '_computeYRange(height, margin)'
 					},
-					// Graph dimensions
-					_graphWidth: {
-						type: Number,
-						computed: '_computeGraphWidth(width, margin)'
-					},
 					_graphHeight: {
 						type: Number,
 						computed: '_computeGraphHeight(height, margin)'
@@ -220,7 +215,7 @@ Custom property                       | Description                             
 					'_drawXAxis(x, _graphHeight)',
 					'_drawYAxis(y, _tasks)',
 					'_drawTodayMarker(x, _graphHeight)',
-					'_drawXGridlines(x, _graphHeight)',
+					'_drawXGridlines(x)',
 					'_drawScatterPlot(x, y, _tasks)',
 					'_drawLabels(x, y, _tasks)',
 					'_drawValuelinePath(x, y, _tasks)',
@@ -296,9 +291,14 @@ Custom property                       | Description                             
 					return;
 				}
 
+				const valueLine = d3.line()
+					.x(task => x(task.date))
+					.y(task => y(task.percentage))
+					(tasks);
+
 				d3.select(this.$.valueLine)
 					.attr('class', 'line')
-					.attr('d', this._valueline(x, y, tasks));
+					.attr('d', valueLine);
 			}
 
 			_drawColouredArea(x, y, tasks, graphHeight) {
@@ -392,13 +392,6 @@ Custom property                       | Description                             
 				d3.select(this.$.svg).select('.tooltip')
 					.text(this.toTooltipText(task.date))
 					.attr('x', this.x(task.date));
-			}
-
-			_valueline(x, y, data) {
-				return d3.line()
-					.x(task => x(task.date))
-					.y(task => y(task.percentage))
-					(data);
 			}
 
 			_isAfter(date1, date2) {
@@ -510,16 +503,10 @@ Custom property                       | Description                             
 					.attr('x', task => this.x(task.date) - 16);
 			}
 
-			_drawXGridlines(x, graphHeight) {
-				if (!x) {
-					return;
-				}
-
+			_drawXGridlines(x) {
 				d3.select(this.$.svg).selectAll('.grid')
-					.attr('transform', 'translate(0,' + graphHeight + ')')
 					.call(d3.axisBottom(x)
 						.ticks(d3.timeMonth)
-						.tickSize(-graphHeight)
 						.tickFormat('')
 					);
 			}
