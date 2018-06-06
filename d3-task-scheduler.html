@@ -74,7 +74,6 @@ Custom property                       | Description                             
 				fill: var(--task-scheduler-axis-color, #666666);
 			}
 			.tooltip {
-				position: absolute;
 				text-align: center;
 				fill: var(--task-scheduler-axis-color, #666666);
 				font-size: var(--task-scheduler-label-size, 10px);
@@ -100,6 +99,7 @@ Custom property                       | Description                             
 			.label {
 				fill: var(--task-scheduler-axis-color, #666666);
 				font-size: var(--task-scheduler-label-size, 10px);
+				font-weight: bold;
 			}
 			#footer {
 				fill: var(--task-scheduler-footer-color, #bfbfbf);
@@ -304,12 +304,12 @@ Custom property                       | Description                             
 			};
 
 			addTooltip(task) {
-				d3.select(this.$.svg).append('text')
+				d3.select(this.$.svg).select('g').append('text')
 					.attr('class', 'tooltip')
 					.text(this.toTooltipText(task.date))
-					.attr('x', this.x(task.date))
+					.attr('x', this.x(task.date) - 16)
 					// Position tooltip above the dot so that it's readable
-					.attr('y', this.y(task.percentage) + 16);
+					.attr('y', this.y(task.percentage) + 42);
 			}
 
 			removeTooltip() {
@@ -430,7 +430,7 @@ Custom property                       | Description                             
 				labels.enter().append('text')
 					.attr('class', 'label')
 					.attr('x', task => x(task.date) - 16)
-					.attr('y', task => y(task.percentage) + 32)
+					.attr('y', task => y(task.percentage) + 28)
 					.text(task => {
 						const progress = `${Math.round(task.progress * 100)}%`;
 						return `${task.name} (${progress})`;
