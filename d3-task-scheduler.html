@@ -126,7 +126,12 @@ Custom property                       | Description                             
 					<g class="grid"></g>
 					<g id="xAxis"></g>
 					<g id="yAxis"></g>
-					<g id="todayMarker"></g>
+					<image
+						id="todayMarker"
+						href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4="
+						height="30"
+						width="30"
+					></image>
 				</g>
 			</svg>
 		</div>
@@ -205,7 +210,7 @@ Custom property                       | Description                             
 				return [
 					'_drawXAxis(x, _graphHeight)',
 					'_drawYAxis(y, _tasks)',
-					'_drawTodayMarker(x, _graphHeight)',
+					'_updateTodayMarker(x, _graphHeight)',
 					'_drawXGridlines(x)',
 					'_drawScatterPlot(x, y, _tasks)',
 					'_drawLabels(x, y, _tasks)',
@@ -332,25 +337,22 @@ Custom property                       | Description                             
 				});
 			}
 
-			_drawTodayMarker(x, graphHeight) {
+			/**
+			 * Place marker to x axis corresponding to today
+			 */
+			_updateTodayMarker(x, graphHeight) {
 				if (!x) {
 					return;
 				}
 
-				// Add marker to x axis corresponding to today
+				const marker = d3.select(this.$.todayMarker);
+
 				const todayDate = new Date().setHours(0, 0, 0, 0);
-				// Default dimension for the marker is 30px
-				const imageSize = 30;
-				const children = d3.select(this.$.svg).select('g').selectAll('todayMarker')
-					.data([todayDate])
-					.enter().append('image')
-					// Location icon encoded as base64 SVG
-					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
-					.attr('height', imageSize)
-					.attr('width', imageSize)
+
+				marker.data([todayDate])
 					// The center of the pin is at half of its size
-					.attr('x', date => x(date) - (imageSize / 2))
-					.attr('y', graphHeight - imageSize);
+					.attr('x', date => x(date) - (marker.attr('width') / 2))
+					.attr('y', graphHeight - marker.attr('height'));
 			}
 
 			toTooltipText(date) {
