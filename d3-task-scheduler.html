@@ -126,6 +126,7 @@ Custom property                       | Description                             
 					<g class="grid"></g>
 					<g id="xAxis"></g>
 					<g id="yAxis"></g>
+					<g id="todayMarker"></g>
 				</g>
 			</svg>
 		</div>
@@ -340,7 +341,7 @@ Custom property                       | Description                             
 				const todayDate = new Date().setHours(0, 0, 0, 0);
 				// Default dimension for the marker is 30px
 				const imageSize = 30;
-				const children = d3.select(this.$.svg).select('g').selectAll('tod')
+				const children = d3.select(this.$.svg).select('g').selectAll('todayMarker')
 					.data([todayDate])
 					.enter().append('image')
 					// Location icon encoded as base64 SVG
