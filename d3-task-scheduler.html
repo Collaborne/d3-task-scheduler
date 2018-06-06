@@ -199,13 +199,13 @@ Custom property                       | Description                             
 			static get observers() {
 				return [
 					'_drawXAxis(x, _graphHeight)',
-					'_drawYAxis(y, _tasks)',
+					'_drawYAxis(y)',
+					'_positionFooter(_graphHeight, margin)',
 					'_positionTodayMarker(x, _graphHeight)',
 					'_drawDots(x, y, _tasks)',
 					'_drawLabels(x, y, _tasks)',
 					'_drawValueLine(x, y, _tasks)',
 					'_drawColoredArea(x, y, _tasks, _graphHeight)',
-					'_positionFooter(_graphHeight, margin)',
 				];
 			}
 
@@ -264,13 +264,12 @@ Custom property                       | Description                             
 					.call(xAxis);
 			}
 
-			_drawYAxis(y, tasks) {
-				if (!y || !tasks) {
+			_drawYAxis(y) {
+				if (!y) {
 					return;
 				}
 
-				const yValues = tasks.map(task => task.percentage);
-				const yAxis = d3.axisLeft(y).tickFormat('').tickValues(yValues).tickSizeInner([-16]);
+				const yAxis = d3.axisLeft(y).tickFormat('').tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
@@ -335,62 +334,13 @@ Custom property                       | Description                             
 				return dayDate1 === dayDate2;
 			}
 
+			/**
+			 * Draws dots for each task
+			 */
 			_drawDots(x, y, tasks) {
 				if (!x || !y || !tasks) {
 					return;
 				}
-				const dragged = task => {
-					const todayDate = new Date();
-
-					const index = tasks.indexOf(task);
-					// Dates can only be moved between the surrounding dots
-					let minDate;
-					if (index > 0) {
-						minDate = tasks[index -1].date;
-					} else {
-						minDate = x.invert(0);
-					}
-
-					let maxDate;
-					if (index < tasks.length - 1) {
-						// Only allow moving until the next task
-						maxDate = tasks[index + 1].date;
-					} else {
-						// Allow post-poning deadlines only after today
-						// and not after the graph X edge
-						maxDate = x.invert(this._graphWidth);
-					}
-
-					// Check date which the dot has been dragged to
-					const futureDate = this.x.invert(d3.event.x);
-					if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate))
-						&& this._isAfter(futureDate, minDate)
-						&& (!maxDate || this._isAfter(maxDate, futureDate))) {
-						// Update the date for the dragged task
-						task.date = futureDate;
-
-						this._drawDots(x, y, tasks);
-
-						// Redraw line connecting dots
-						this._drawValueLine(x, y, tasks);
-
-						// Redraw dot labels
-						this._updateLabels();
-
-						// Redraw coloured area below value line
-						this._drawColoredArea(x, y, tasks, this._graphHeight);
-
-						// Update tooltip when the dot is dragged
-						this.updateTooltip(task);
-
-						this.dispatchEvent(new CustomEvent('deadline-changed', {
-							detail: {
-								taskId: task.id,
-								date: futureDate,
-							},
-						}));
-					}
-				};
 
 				// Define class of the circle as the phase name
 				// plus 'draggable' to apply different styles
@@ -404,7 +354,7 @@ Custom property                       | Description                             
 					.attr('class', computeDotClass)
 					.attr('cx', task => x(task.date))
 					.attr('cy', task => y(task.percentage))
-					.call(d3.drag().on('drag', dragged));
+					.call(d3.drag().on('drag', this._onDotDragged.bind(this)));
 
 				dots.enter().append('circle')
 					.attr('class', computeDotClass)
@@ -413,9 +363,65 @@ Custom property                       | Description                             
 					.attr('cy', task => y(task.percentage))
 					.on('mouseover', task => this.addTooltip(task))
 					.on('mouseout', () => this.removeTooltip())
-					.call(d3.drag().on('drag', dragged));
+					.call(d3.drag().on('drag', this._onDotDragged.bind(this)));
 
 				dots.exit().remove();
+			}
+
+			/**
+			 * Handles if a dot is dragged
+			 */
+			_onDotDragged(task) {
+				const todayDate = new Date();
+
+				const index = this._tasks.indexOf(task);
+				// Dates can only be moved between the surrounding dots
+				let minDate;
+				if (index > 0) {
+					minDate = this._tasks[index -1].date;
+				} else {
+					minDate = this.x.invert(0);
+				}
+
+				let maxDate;
+				if (index < this._tasks.length - 1) {
+					// Only allow moving until the next task
+					maxDate = this._tasks[index + 1].date;
+				} else {
+					// Allow post-poning deadlines only after today
+					// and not after the graph X edge
+					maxDate = this.x.invert(this._graphWidth);
+				}
+
+				// Check date which the dot has been dragged to
+				const futureDate = this.x.invert(d3.event.x);
+				if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate))
+					&& this._isAfter(futureDate, minDate)
+					&& (!maxDate || this._isAfter(maxDate, futureDate))) {
+					// Update the date for the dragged task
+					task.date = futureDate;
+
+					this._drawDots(this.x, this.y, this._tasks);
+
+					// Redraw line connecting dots
+					this._drawValueLine(this.x, this.y, this._tasks);
+
+					// Redraw dot labels
+					this._updateLabels();
+
+					// Redraw coloured area below value line
+					this._drawColoredArea(this.x, this.y, this._tasks, this._graphHeight);
+
+					// Update tooltip when the dot is dragged
+					this.updateTooltip(task);
+
+					this.dispatchEvent(new CustomEvent('deadline-changed', {
+						detail: {
+							taskId: task.id,
+							date: futureDate,
+						},
+					}));
+				}
 			}
 
 			_drawLabels(x, y, tasks) {
