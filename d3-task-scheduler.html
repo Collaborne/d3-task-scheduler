@@ -201,7 +201,7 @@ Custom property                       | Description                             
 					'_drawXAxis(x, _graphHeight)',
 					'_drawYAxis(y, _tasks)',
 					'_positionTodayMarker(x, _graphHeight)',
-					'_drawScatterPlot(x, y, _tasks)',
+					'_drawDots(x, y, _tasks)',
 					'_drawLabels(x, y, _tasks)',
 					'_drawValueLine(x, y, _tasks)',
 					'_drawColoredArea(x, y, _tasks, _graphHeight)',
@@ -335,7 +335,7 @@ Custom property                       | Description                             
 				return dayDate1 === dayDate2;
 			}
 
-			_drawScatterPlot(x, y, tasks) {
+			_drawDots(x, y, tasks) {
 				if (!x || !y || !tasks) {
 					return;
 				}
@@ -368,17 +368,8 @@ Custom property                       | Description                             
 						&& (!maxDate || this._isAfter(maxDate, futureDate))) {
 						// Update the date for the dragged task
 						task.date = futureDate;
-						// Move the current dot
-						d3.select(this.$.svg)
-							.select(`.${task.taskId}`)
-							.attr('cx', this.x(task.date));
 
-						this.dispatchEvent(new CustomEvent('deadline-changed', {
-							detail: {
-								taskId: task.id,
-								date: futureDate,
-							},
-						}));
+						this._drawDots(x, y, tasks);
 
 						// Redraw line connecting dots
 						this._drawValueLine(x, y, tasks);
@@ -387,31 +378,44 @@ Custom property                       | Description                             
 						this._updateLabels();
 
 						// Redraw coloured area below value line
-						this._drawColoredArea(this.x, this.y, tasks, this._graphHeight);
+						this._drawColoredArea(x, y, tasks, this._graphHeight);
 
 						// Update tooltip when the dot is dragged
 						this.updateTooltip(task);
+
+						this.dispatchEvent(new CustomEvent('deadline-changed', {
+							detail: {
+								taskId: task.id,
+								date: futureDate,
+							},
+						}));
 					}
 				};
 
-				d3.select(this.$.svg).select('g').selectAll('dot')
+				// Define class of the circle as the phase name
+				// plus 'draggable' to apply different styles
+				const computeDotClass = task => {
+					const isDraggable = this._isAfter(task.date, new Date());
+					return `${task.taskId}${isDraggable ? ' draggable' : ''}`;
+				};
+
+				const dots = d3.select(this.$.svg).select('g').selectAll('circle')
 					.data(tasks)
-					.enter().append('circle')
-					// Define class of the circle as the phase name
-					// plus 'draggable' to apply different styles
-					.attr('class', task => {
-						const todayDate = new Date();
-						if (this._isAfter(task.date, todayDate)) {
-							return `${task.taskId} draggable`;
-						}
-						return task.taskId;
-					})
+					.attr('class', computeDotClass)
+					.attr('cx', task => x(task.date))
+					.attr('cy', task => y(task.percentage))
+					.call(d3.drag().on('drag', dragged));
+
+				dots.enter().append('circle')
+					.attr('class', computeDotClass)
 					.attr('r', 8)
 					.attr('cx', task => x(task.date))
 					.attr('cy', task => y(task.percentage))
 					.on('mouseover', task => this.addTooltip(task))
 					.on('mouseout', () => this.removeTooltip())
 					.call(d3.drag().on('drag', dragged));
+
+				dots.exit().remove();
 			}
 
 			_drawLabels(x, y, tasks) {
