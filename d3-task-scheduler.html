@@ -92,6 +92,7 @@ Custom property                       | Description                             
 			.draggable {
 				stroke: #fff;
 				stroke-width: 2;
+				cursor: -webkit-grab;
 			}
 			#area {
 				fill: var(--task-scheduler-area-color, #f6faf6);
@@ -143,7 +144,10 @@ Custom property                       | Description                             
 					/**
 					* Array of tasks
 					*/
-					deadlines: Array,
+					deadlines: {
+						type: Array,
+						notify: true,
+					},
 					/**
 					* Component width
 					*/
@@ -286,14 +290,12 @@ Custom property                       | Description                             
 				const projectTotalDuration = lastDeadline.getTime() - firstDeadline.getTime();
 				const parseDate = d3.timeParse('%Y-%m-%d');
 				return deadlines.map(deadline => {
-					// Progress is relative weight of the phase compared to the total project duration
-					const progress = (new Date(deadline.date).getTime() - firstDeadline.getTime()) / projectTotalDuration;
 					return {
 						name: deadline.name,
 						taskId: deadline.taskId,
 						date: parseDate(deadline.date),
-						progress,
-						percentage: 100 * progress,
+						progress: deadline.progress,
+						percentage: 100 * deadline.progress,
 					};
 				});
 			}
@@ -345,7 +347,7 @@ Custom property                       | Description                             
 				// Define class of the circle as the phase name
 				// plus 'draggable' to apply different styles
 				const computeDotClass = task => {
-					const isDraggable = this._isAfter(task.date, new Date());
+					const isDraggable = this._isEqual(task.date, new Date()) || this._isAfter(task.date, new Date());
 					return `${task.taskId}${isDraggable ? ' draggable' : ''}`;
 				};
 
@@ -355,6 +357,10 @@ Custom property                       | Description                             
 					.attr('cx', task => x(task.date))
 					.attr('cy', task => y(task.percentage));
 
+				const drag = d3.drag()
+					.on('drag', this._onDotDragged.bind(this))
+					.on('end', this._onDotDragEnd.bind(this));
+
 				dots.enter().append('circle')
 					.attr('class', computeDotClass)
 					.attr('r', 8)
@@ -362,7 +368,7 @@ Custom property                       | Description                             
 					.attr('cy', task => y(task.percentage))
 					.on('mouseover', task => this.addTooltip(task))
 					.on('mouseout', () => this.removeTooltip())
-					.call(d3.drag().on('drag', this._onDotDragged.bind(this)));
+					.call(drag);
 
 				dots.exit().remove();
 			}
@@ -371,17 +377,68 @@ Custom property                       | Description                             
 			 * Handles if a dot is dragged
 			 */
 			_onDotDragged(task) {
+				const futureDate = this.x.invert(d3.event.x);
+				if (this._canDrag(task, futureDate)) {
+					// Update the date for the dragged task
+					task.date = futureDate;
+
+					this._drawDots(this.x, this.y, this._tasks);
+					this._drawValueLine(this.x, this.y, this._tasks);
+					this._drawLabels(this.x, this.y, this._tasks);
+					this._drawColoredArea(this.x, this.y, this._tasks, this._graphHeight);
+					this._updateTooltip(task);
+				}
+			}
+
+			/**
+			 * Handles if a dot is dragged to final point
+			 */
+			_onDotDragEnd(task) {
+				const futureDate = this.x.invert(d3.event.x);
+				if (this._canDrag(task, futureDate)) {
+					this.deadlines = this.deadlines.map(deadline => {
+						if (deadline.taskId === task.taskId) {
+							const formatDate = d3.timeFormat('%Y-%m-%d');
+							return Object.assign({}, deadline, {
+								date: formatDate(futureDate),
+							});
+						}
+
+						return deadline;
+					});
+
+					this.dispatchEvent(new CustomEvent('deadline-changed', {
+						detail: {
+							taskId: task.id,
+							date: futureDate,
+						},
+					}));
+				}
+			}
+
+			/**
+			 * Check if the task can be moved to a specific date
+			 */
+			_canDrag(task, futureDate) {
 				const todayDate = new Date();
+				if (!this._isEqual(futureDate, todayDate) && !this._isAfter(futureDate, todayDate)) {
+					return false;
+				}
 
 				const index = this._tasks.indexOf(task);
-				// Dates can only be moved between the surrounding dots
+
+				// Dates can only be moved up to the previous task (or today)
 				let minDate;
 				if (index > 0) {
 					minDate = this._tasks[index -1].date;
 				} else {
 					minDate = this.x.invert(0);
 				}
+				if (!this._isAfter(futureDate, minDate)) {
+					return false;
+				}
 
+				// Dates can only be moved up to the next task
 				let maxDate;
 				if (index < this._tasks.length - 1) {
 					// Only allow moving until the next task
@@ -392,27 +449,7 @@ Custom property                       | Description                             
 					maxDate = this.x.invert(this._graphWidth);
 				}
 
-				// Check date which the dot has been dragged to
-				const futureDate = this.x.invert(d3.event.x);
-				if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate))
-					&& this._isAfter(futureDate, minDate)
-					&& (!maxDate || this._isAfter(maxDate, futureDate))) {
-					// Update the date for the dragged task
-					task.date = futureDate;
-
-					this._drawDots(this.x, this.y, this._tasks);
-					this._drawValueLine(this.x, this.y, this._tasks);
-					this._drawLabels(this.x, this.y, this._tasks);
-					this._drawColoredArea(this.x, this.y, this._tasks, this._graphHeight);
-					this._updateTooltip(task);
-
-					this.dispatchEvent(new CustomEvent('deadline-changed', {
-						detail: {
-							taskId: task.id,
-							date: futureDate,
-						},
-					}));
-				}
+				return !maxDate || this._isAfter(maxDate, futureDate);
 			}
 
 			/**

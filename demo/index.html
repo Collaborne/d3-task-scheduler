@@ -36,7 +36,7 @@
 
 							Start: <input value="{{start::input}}" type="date"/><input type="submit" on-tap="computeTasks"/>
 							<d3-task-scheduler
-								deadlines="[[tasks]]"
+								deadlines="{{tasks}}"
 								on-deadline-changed="onDeadlineChanged"
 							></d3-task-scheduler>
 							<template is="dom-repeat" items="[[tasks]]" as="task">
@@ -53,26 +53,31 @@
 									taskId: 'start',
 									name: 'Start',
 									date: scope.start,
+									progress: 0,
 								},
 								{
 									taskId: 'planning',
 									name: 'Planning',
 									date: inDays(scope.start, 14),
+									progress: 0.175,
 								},
 								{
 									taskId: 'concepting',
 									name: 'Concepting',
 									date: inDays(scope.start, 33),
+									progress: 0.4175,
 								},
 								{
 									taskId: 'implementation',
 									name: 'Implementation',
 									date: inDays(scope.start, 70),
+									progress: 0.875,
 								},
 								{
 									taskId: 'validation',
 									name: 'Validation',
 									date: inDays(scope.start, 80),
+									progress: 1,
 								},
 							];
 						};
