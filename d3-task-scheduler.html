@@ -197,6 +197,20 @@ Custom property                       | Description                             
 						type: Array,
 						computed: '_computeTasks(deadlines)',
 					},
+
+					_parseDate: {
+						type: Function,
+						value: function() { return d3.timeParse('%Y-%m-%d'); },
+					},
+					_formatDate: {
+						type: Function,
+						value: function() { return d3.timeFormat('%Y-%m-%d'); },
+					},
+					_tooltipFormat: {
+						type: Function,
+						value: function() { return d3.timeFormat('%d %B %Y'); },
+					},
+					_todayDateStr: String,
 				};
 			}
 
@@ -205,12 +219,18 @@ Custom property                       | Description                             
 					'_drawXAxis(x, _graphHeight)',
 					'_drawYAxis(y)',
 					'_positionFooter(_graphHeight, margin)',
-					'_positionTodayMarker(x, _graphHeight)',
-					'_drawDots(x, y, _tasks)',
+					'_positionTodayMarker(x, _graphHeight, _todayDateStr)',
+					'_drawDots(x, y, _tasks, _todayDateStr)',
 					'_drawLabels(x, y, _tasks)',
 					'_drawValueLine(x, y, _tasks)',
 					'_drawColoredArea(x, y, _tasks, _graphHeight)',
 				];
+			}
+
+			ready() {
+				super.ready();
+
+				this._todayDateStr = this._formatDate(new Date());
 			}
 
 			_computeTransform(margin) {
@@ -255,7 +275,7 @@ Custom property                       | Description                             
 			}
 
 			_drawXAxis(x, graphHeight) {
-				if (!x) {
+				if (!x || !graphHeight) {
 					return;
 				}
 
@@ -269,10 +289,6 @@ Custom property                       | Description                             
 			}
 
 			_drawYAxis(y) {
-				if (!y) {
-					return;
-				}
-
 				const yAxis = d3.axisLeft(y).tickFormat('').tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
@@ -280,35 +296,22 @@ Custom property                       | Description                             
 			}
 
 			_computeTasks(deadlines) {
-				if (!deadlines) {
-					return;
-				}
-
-				const firstDeadline = new Date(deadlines[0].date);
-				const lastDeadline = new Date(deadlines[deadlines.length - 1].date);
-
-				const projectTotalDuration = lastDeadline.getTime() - firstDeadline.getTime();
-				const parseDate = d3.timeParse('%Y-%m-%d');
 				return deadlines.map(deadline => {
 					return {
 						name: deadline.name,
 						taskId: deadline.taskId,
-						date: parseDate(deadline.date),
+						date: this._parseDate(deadline.date),
+						dateStr: deadline.date,
 						progress: deadline.progress,
 						percentage: 100 * deadline.progress,
 					};
 				});
 			}
 
-			toTooltipText(date) {
-				const format = d3.timeFormat('%d %B %Y');
-				return `${format(new Date(date))}`;
-			};
-
 			addTooltip(task) {
 				d3.select(this.$.svg).select('g').append('text')
 					.attr('class', 'tooltip')
-					.text(this.toTooltipText(task.date))
+					.text(this._tooltipFormat(task.date))
 					.attr('x', this.x(task.date) - 16)
 					// Position tooltip above the dot so that it's readable
 					.attr('y', this.y(task.percentage) + 42);
@@ -320,34 +323,22 @@ Custom property                       | Description                             
 
 			_updateTooltip(task) {
 				d3.select(this.$.svg).select('.tooltip')
-					.text(this.toTooltipText(task.date))
+					.text(this._tooltipFormat(task.date))
 					.attr('x', this.x(task.date));
-			}
-
-			_isAfter(date1, date2) {
-				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
-				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
-				return dayDate1 > dayDate2;
-			}
-
-			_isEqual(date1, date2) {
-				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
-				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
-				return dayDate1 === dayDate2;
 			}
 
 			/**
 			 * Draws dots for each task
 			 */
-			_drawDots(x, y, tasks) {
-				if (!x || !y || !tasks) {
+			_drawDots(x, y, tasks, todayDateStr) {
+				if (!x || !y || !tasks || !todayDateStr) {
 					return;
 				}
 
 				// Define class of the circle as the phase name
 				// plus 'draggable' to apply different styles
 				const computeDotClass = task => {
-					const isDraggable = this._isEqual(task.date, new Date()) || this._isAfter(task.date, new Date());
+					const isDraggable = task.dateStr >= todayDateStr;
 					return `${task.taskId}${isDraggable ? ' draggable' : ''}`;
 				};
 
@@ -382,7 +373,7 @@ Custom property                       | Description                             
 					// Update the date for the dragged task
 					task.date = futureDate;
 
-					this._drawDots(this.x, this.y, this._tasks);
+					this._drawDots(this.x, this.y, this._tasks, this._todayDateStr);
 					this._drawValueLine(this.x, this.y, this._tasks);
 					this._drawLabels(this.x, this.y, this._tasks);
 					this._drawColoredArea(this.x, this.y, this._tasks, this._graphHeight);
@@ -398,9 +389,8 @@ Custom property                       | Description                             
 				if (this._canDrag(task, futureDate)) {
 					this.deadlines = this.deadlines.map(deadline => {
 						if (deadline.taskId === task.taskId) {
-							const formatDate = d3.timeFormat('%Y-%m-%d');
 							return Object.assign({}, deadline, {
-								date: formatDate(futureDate),
+								date: this._formatDate(futureDate),
 							});
 						}
 
@@ -420,36 +410,32 @@ Custom property                       | Description                             
 			 * Check if the task can be moved to a specific date
 			 */
 			_canDrag(task, futureDate) {
-				const todayDate = new Date();
-				if (!this._isEqual(futureDate, todayDate) && !this._isAfter(futureDate, todayDate)) {
+				const futureDateStr = this._formatDate(futureDate);
+
+				// Dates can only moved forward to today
+				if (futureDateStr < this._todayDateStr) {
 					return false;
 				}
 
 				const index = this._tasks.indexOf(task);
 
-				// Dates can only be moved up to the previous task (or today)
-				let minDate;
+				// Dates can only be moved up to the previous task
 				if (index > 0) {
-					minDate = this._tasks[index -1].date;
-				} else {
-					minDate = this.x.invert(0);
-				}
-				if (!this._isAfter(futureDate, minDate)) {
-					return false;
+					const minDate = this._tasks[index -1].dateStr;
+					if (futureDateStr < minDate) {
+						return false;
+					}
 				}
 
 				// Dates can only be moved up to the next task
-				let maxDate;
 				if (index < this._tasks.length - 1) {
-					// Only allow moving until the next task
-					maxDate = this._tasks[index + 1].date;
-				} else {
-					// Allow post-poning deadlines only after today
-					// and not after the graph X edge
-					maxDate = this.x.invert(this._graphWidth);
+					const maxDate = this._tasks[index + 1].dateStr;
+					if (futureDateStr > maxDate) {
+						return false;
+					}
 				}
 
-				return !maxDate || this._isAfter(maxDate, futureDate);
+				return true;
 			}
 
 			/**
@@ -512,12 +498,12 @@ Custom property                       | Description                             
 			/**
 			 * Positions the Today pin and line on the x-axis
 			 */
-			_positionTodayMarker(x, graphHeight) {
-				if (!x) {
+			_positionTodayMarker(x, graphHeight, todayDateStr) {
+				if (!x || !graphHeight || !todayDateStr) {
 					return;
 				}
 
-				const todayDate = new Date().setHours(0, 0, 0, 0);
+				const todayDate = this._parseDate(todayDateStr);
 
 				const pin = d3.select(this.$.todayPin);
 				pin
