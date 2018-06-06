@@ -386,25 +386,23 @@ Custom property                       | Description                             
 			 * Handles if a dot is dragged to final point
 			 */
 			_onDotDragEnd(task) {
-				const futureDate = this.x.invert(d3.event.x);
-				if (this._canDrag(task, futureDate)) {
-					this.deadlines = this.deadlines.map(deadline => {
-						if (deadline.taskId === task.taskId) {
-							return Object.assign({}, deadline, {
-								date: this._formatDate(futureDate),
-							});
-						}
+				this.deadlines = this.deadlines.map(deadline => {
+					if (deadline.taskId === task.taskId) {
+						return Object.assign({}, deadline, {
+							// The task date was set by while dragging by _onDotDragged()
+							date: this._formatDate(task.date),
+						});
+					}
 
-						return deadline;
-					});
+					return deadline;
+				});
 
-					this.dispatchEvent(new CustomEvent('deadline-changed', {
-						detail: {
-							taskId: task.id,
-							date: futureDate,
-						},
-					}));
-				}
+				this.dispatchEvent(new CustomEvent('deadline-changed', {
+					detail: {
+						taskId: task.id,
+						date: futureDate,
+					},
+				}));
 			}
 
 			/**
