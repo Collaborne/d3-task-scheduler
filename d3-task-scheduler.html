@@ -128,7 +128,7 @@ Custom property                       | Description                             
 
 					<line id="todayLine"></line>
 					<image
-						id="todayMarker"
+						id="todayPin"
 						href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4="
 						height="30"
 						width="30"
@@ -340,28 +340,21 @@ Custom property                       | Description                             
 			}
 
 			/**
-			 * Place today marker on the x-axis
+			 * Place today pin and line on the x-axis
 			 */
 			_updateTodayMarker(x, graphHeight) {
 				if (!x) {
 					return;
 				}
 
-				const marker = d3.select(this.$.todayMarker);
-
 				const todayDate = new Date().setHours(0, 0, 0, 0);
 
-				marker.data([todayDate])
+				const pin = d3.select(this.$.todayPin);
+				pin
+					.data([todayDate])
 					// The center of the pin is at half of its size
-					.attr('x', date => x(date) - (marker.attr('width') / 2))
-					.attr('y', graphHeight - marker.attr('height'));
-			}
-
-			/**
-			 * Place today line on the x-axis
-			 */
-			_updateTodayLine(x, graphHeight) {
-				const todayDate = new Date().setHours(0, 0, 0, 0);
+					.attr('x', date => x(date) - (pin.attr('width') / 2))
+					.attr('y', graphHeight - pin.attr('height'));
 
 				d3.select(this.$.todayLine)
 					.data([todayDate])
