@@ -80,8 +80,8 @@ Custom property                       | Description                             
 				fill: var(--task-scheduler-axis-color, #666666);
 				font-size: var(--task-scheduler-label-size, 10px);
 			}
-			#today {
-				stroke-width: 2;
+			#todayLine {
+				stroke-width: 1;
 				stroke: var(--task-scheduler-today-line-color, #808080);
 			}
 			#valueLine {
@@ -120,12 +120,13 @@ Custom property                       | Description                             
 				<rect class="footer"></rect>
 				<g transform$="[[_transform]]">
 					<path id="area"></path>
-					<line id="today"></line>
 					<tod class="grid"></tod>
 					<path id="valueLine"></path>
 					<g class="grid"></g>
 					<g id="xAxis"></g>
 					<g id="yAxis"></g>
+
+					<line id="todayLine"></line>
 					<image
 						id="todayMarker"
 						href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4="
@@ -211,6 +212,7 @@ Custom property                       | Description                             
 					'_drawXAxis(x, _graphHeight)',
 					'_drawYAxis(y, _tasks)',
 					'_updateTodayMarker(x, _graphHeight)',
+					'_updateTodayLine(x, _graphHeight)',
 					'_drawXGridlines(x)',
 					'_drawScatterPlot(x, y, _tasks)',
 					'_drawLabels(x, y, _tasks)',
@@ -338,7 +340,7 @@ Custom property                       | Description                             
 			}
 
 			/**
-			 * Place marker to x axis corresponding to today
+			 * Place today marker on the x-axis
 			 */
 			_updateTodayMarker(x, graphHeight) {
 				if (!x) {
@@ -353,6 +355,20 @@ Custom property                       | Description                             
 					// The center of the pin is at half of its size
 					.attr('x', date => x(date) - (marker.attr('width') / 2))
 					.attr('y', graphHeight - marker.attr('height'));
+			}
+
+			/**
+			 * Place today line on the x-axis
+			 */
+			_updateTodayLine(x, graphHeight) {
+				const todayDate = new Date().setHours(0, 0, 0, 0);
+
+				d3.select(this.$.todayLine)
+					.data([todayDate])
+					.attr('x1', date => x(date))
+					.attr('x2', date => x(date))
+					.attr('y1', 0)
+					.attr('y2', graphHeight);
 			}
 
 			toTooltipText(date) {
