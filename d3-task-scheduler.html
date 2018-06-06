@@ -16,7 +16,6 @@ Custom property                       | Description                             
 `--task-scheduler-footer-color`       | Color of the background of footer                        | `#bfbfbf`
 `--task-scheduler-today-marker-color` | Color of the marker indicating today                     | `#E30B5C`
 `--task-scheduler-dots-color`         | Color of the dots and the line connecting them           | `#71af26`
-`--task-scheduler-grid-color`         | Color of the grid lines                                  | `#d8d8d8`
 `--task-scheduler-axis-color`         | Color of the axis, including axis line, ticks and labels | `#666666`
 `--task-scheduler-font-family`        | Font family for the text parts                           | `sans-serif`
 `--task-scheduler-label-size`         | Font size for graph labels                               | `8px`
@@ -102,27 +101,17 @@ Custom property                       | Description                             
 				fill: var(--task-scheduler-axis-color, #666666);
 				font-size: var(--task-scheduler-label-size, 10px);
 			}
-			.grid line {
-				stroke: var(--task-scheduler-grid-color, #d8d8d8);
-				stroke-opacity: 0.7;
-				shape-rendering: crispEdges;
-			}
-			.grid path {
-				stroke-width: 0;
-			}
-			.footer {
+			#footer {
 				fill: var(--task-scheduler-footer-color, #bfbfbf);
 			}
 		</style>
 
 		<div class="svg-container">
 			<svg id="svg" viewBox="0 0 1000 500" preserveAspectRatio="xMinYMin meet" class="svg-content">
-				<rect class="footer"></rect>
+				<rect id="footer" x="0" width="100%"></rect>
 				<g transform$="[[_transform]]">
 					<path id="area"></path>
-					<tod class="grid"></tod>
 					<path id="valueLine"></path>
-					<g class="grid"></g>
 					<g id="xAxis"></g>
 					<g id="yAxis"></g>
 
@@ -211,14 +200,12 @@ Custom property                       | Description                             
 				return [
 					'_drawXAxis(x, _graphHeight)',
 					'_drawYAxis(y, _tasks)',
-					'_updateTodayMarker(x, _graphHeight)',
-					'_updateTodayLine(x, _graphHeight)',
-					'_drawXGridlines(x)',
+					'_positionTodayMarker(x, _graphHeight)',
 					'_drawScatterPlot(x, y, _tasks)',
 					'_drawLabels(x, y, _tasks)',
-					'_drawValuelinePath(x, y, _tasks)',
-					'_drawColouredArea(x, y, _tasks, _graphHeight)',
-					'_drawColouredFooter(width, _graphHeight, margin)',
+					'_drawValueLine(x, y, _tasks)',
+					'_drawColoredArea(x, y, _tasks, _graphHeight)',
+					'_positionFooter(_graphHeight, margin)',
 				];
 			}
 
@@ -289,33 +276,6 @@ Custom property                       | Description                             
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(x, y, tasks) {
-				if (!x || !y) {
-					return;
-				}
-
-				const valueLine = d3.line()
-					.x(task => x(task.date))
-					.y(task => y(task.percentage))
-					(tasks);
-
-				d3.select(this.$.valueLine)
-					.attr('class', 'line')
-					.attr('d', valueLine);
-			}
-
-			_drawColouredArea(x, y, tasks, graphHeight) {
-				if (!x || !y) {
-					return;
-				}
-
-				const area = d3.area()
-					.x(task => x(task.date))
-					.y0(graphHeight)
-					.y1(task => y(task.percentage));
-				d3.select(this.$.area).attr('d', area(tasks));
-			}
-
 			_computeTasks(deadlines) {
 				if (!deadlines) {
 					return;
@@ -337,31 +297,6 @@ Custom property                       | Description                             
 						percentage: 100 * progress,
 					};
 				});
-			}
-
-			/**
-			 * Place today pin and line on the x-axis
-			 */
-			_updateTodayMarker(x, graphHeight) {
-				if (!x) {
-					return;
-				}
-
-				const todayDate = new Date().setHours(0, 0, 0, 0);
-
-				const pin = d3.select(this.$.todayPin);
-				pin
-					.data([todayDate])
-					// The center of the pin is at half of its size
-					.attr('x', date => x(date) - (pin.attr('width') / 2))
-					.attr('y', graphHeight - pin.attr('height'));
-
-				d3.select(this.$.todayLine)
-					.data([todayDate])
-					.attr('x1', date => x(date))
-					.attr('x2', date => x(date))
-					.attr('y1', 0)
-					.attr('y2', graphHeight);
 			}
 
 			toTooltipText(date) {
@@ -446,13 +381,13 @@ Custom property                       | Description                             
 						}));
 
 						// Redraw line connecting dots
-						this._drawValuelinePath(x, y, tasks);
+						this._drawValueLine(x, y, tasks);
 
 						// Redraw dot labels
 						this._updateLabels();
 
 						// Redraw coloured area below value line
-						this._drawColouredArea(this.x, this.y, tasks, this._graphHeight);
+						this._drawColoredArea(this.x, this.y, tasks, this._graphHeight);
 
 						// Update tooltip when the dot is dragged
 						this.updateTooltip(task);
@@ -505,19 +440,70 @@ Custom property                       | Description                             
 					.attr('x', task => this.x(task.date) - 16);
 			}
 
-			_drawXGridlines(x) {
-				d3.select(this.$.svg).selectAll('.grid')
-					.call(d3.axisBottom(x)
-						.ticks(d3.timeMonth)
-						.tickFormat('')
-					);
+			/**
+			 * Positions the line connecting all dots
+			 */
+			_drawValueLine(x, y, tasks) {
+				if (!x || !y) {
+					return;
+				}
+
+				const valueLine = d3.line()
+					.x(task => x(task.date))
+					.y(task => y(task.percentage))
+					(tasks);
+
+				d3.select(this.$.valueLine)
+					.attr('class', 'line')
+					.attr('d', valueLine);
 			}
 
-			_drawColouredFooter(width, graphHeight, margin) {
-				d3.select(this.$.svg).select('.footer')
-						.attr('x', 0)
+			/**
+			 * Positions the colored area below the tasks line
+			 */
+			_drawColoredArea(x, y, tasks, graphHeight) {
+				if (!x || !y) {
+					return;
+				}
+
+				const area = d3.area()
+					.x(task => x(task.date))
+					.y0(graphHeight)
+					.y1(task => y(task.percentage));
+				d3.select(this.$.area).attr('d', area(tasks));
+			}
+
+			/**
+			 * Positions the Today pin and line on the x-axis
+			 */
+			_positionTodayMarker(x, graphHeight) {
+				if (!x) {
+					return;
+				}
+
+				const todayDate = new Date().setHours(0, 0, 0, 0);
+
+				const pin = d3.select(this.$.todayPin);
+				pin
+					.data([todayDate])
+					// The center of the pin is at half of its size
+					.attr('x', date => x(date) - (pin.attr('width') / 2))
+					.attr('y', graphHeight - pin.attr('height'));
+
+				d3.select(this.$.todayLine)
+					.data([todayDate])
+					.attr('x1', date => x(date))
+					.attr('x2', date => x(date))
+					.attr('y1', 0)
+					.attr('y2', graphHeight);
+			}
+
+			/**
+			 * Positions the gray footer
+			 */
+			_positionFooter(graphHeight, margin) {
+				d3.select(this.$.footer)
 						.attr('y', graphHeight + margin.top)
-						.attr('width', width)
 						.attr('height', margin.bottom);
 			}
 		}
