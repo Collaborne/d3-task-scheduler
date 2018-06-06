@@ -316,7 +316,7 @@ Custom property                       | Description                             
 				d3.select(this.$.svg).select('.tooltip').remove();
 			}
 
-			updateTooltip(task) {
+			_updateTooltip(task) {
 				d3.select(this.$.svg).select('.tooltip')
 					.text(this.toTooltipText(task.date))
 					.attr('x', this.x(task.date));
@@ -353,8 +353,7 @@ Custom property                       | Description                             
 					.data(tasks)
 					.attr('class', computeDotClass)
 					.attr('cx', task => x(task.date))
-					.attr('cy', task => y(task.percentage))
-					.call(d3.drag().on('drag', this._onDotDragged.bind(this)));
+					.attr('cy', task => y(task.percentage));
 
 				dots.enter().append('circle')
 					.attr('class', computeDotClass)
@@ -402,18 +401,10 @@ Custom property                       | Description                             
 					task.date = futureDate;
 
 					this._drawDots(this.x, this.y, this._tasks);
-
-					// Redraw line connecting dots
 					this._drawValueLine(this.x, this.y, this._tasks);
-
-					// Redraw dot labels
-					this._updateLabels();
-
-					// Redraw coloured area below value line
+					this._drawLabels(this.x, this.y, this._tasks);
 					this._drawColoredArea(this.x, this.y, this._tasks, this._graphHeight);
-
-					// Update tooltip when the dot is dragged
-					this.updateTooltip(task);
+					this._updateTooltip(task);
 
 					this.dispatchEvent(new CustomEvent('deadline-changed', {
 						detail: {
@@ -424,30 +415,28 @@ Custom property                       | Description                             
 				}
 			}
 
+			/**
+			 * Draw labels for each dot
+			 */
 			_drawLabels(x, y, tasks) {
 				if (!x || !y || !tasks) {
 					return;
 				}
-				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(tasks)
-					.enter().append('text')
-					.attr('class', 'label')
-					.attr('x', task => x(task.date))
-					.attr('y', task => y(task.percentage) + 32)
-					.append('tspan')
-					.attr('dy', 0)
-					.attr('x', task => x(task.date) - 16)
-					.text(task => task.name)
-					.append('tspan')
-					// Offset by 1.2 em
-					.attr('dy', '1.2em')
-					.attr('x', task => x(task.date) - 16)
-					.text(task => `${Math.round(task.progress * 100)}% progress`);
-			}
 
-			_updateLabels() {
-				d3.select(this.$.svg).select('g').selectAll('text.label tspan')
-					.attr('x', task => this.x(task.date) - 16);
+				const labels = d3.select(this.$.svg).select('g').selectAll('.label')
+					.data(tasks)
+					.attr('x', task => x(task.date) - 16);
+
+				labels.enter().append('text')
+					.attr('class', 'label')
+					.attr('x', task => x(task.date) - 16)
+					.attr('y', task => y(task.percentage) + 32)
+					.text(task => {
+						const progress = `${Math.round(task.progress * 100)}%`;
+						return `${task.name} (${progress})`;
+					});
+
+				labels.exit().remove();
 			}
 
 			/**
