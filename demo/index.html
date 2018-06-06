@@ -3,14 +3,18 @@
 		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
 		<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
 		<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+		<link rel="import" href="../../paper-styles/demo-pages.html">
 		<link rel="import" href="../d3-task-scheduler.html">
 
 		<script>
 			function toString(date) {
-				return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+				const year = date.getFullYear();
+				const month = (date.getMonth() + 1).toString().padStart(2, '0');
+				const day = date.getDate().toString().padStart(2, '0');
+				return `${year}-${month}-${day}`;
 			}
-			function inDays(nrDays) {
-				const date = new Date();
+			function inDays(start, nrDays) {
+				const date = new Date(start);
 				date.setDate(date.getDate() + nrDays);
 				return toString(date);
 			}
@@ -18,7 +22,7 @@
 	</head>
 
 	<body>
-		<div class="vertical-section-container centered">
+		<div class="vertical-section-container">
 			<h2>Task scheduler</h2>
 			<demo-snippet>
 				<template>
@@ -29,38 +33,69 @@
 									width: 100%;
 								}
 							</style>
+
+							Start: <input value="{{start::input}}" type="date"/><input type="submit" on-tap="computeTasks"/>
 							<d3-task-scheduler
-								start="[[start]]"
-								deadlines="[[deadlines]]">
-							</d3-task-scheduler>
+								deadlines="{{tasks}}"
+								on-deadline-changed="onDeadlineChanged"
+							></d3-task-scheduler>
+							<template is="dom-repeat" items="[[tasks]]" as="task">
+								[[task.name]] - [[task.date]]<br>
+							</template>
 						</template>
 					</dom-bind>
 
 					<script>
 						const scope = document.querySelector('dom-bind');
-						scope.start = inDays(-10);
-						scope.deadlines = [
-							{
-								taskId: 'planning',
-								name: 'Planning',
-								date: inDays(-4),
-							},
-							{
-								taskId: 'concepting',
-								name: 'Concepting',
-								date: inDays(23),
-							},
-							{
-								taskId: 'implementation',
-								name: 'Implementation',
-								date: inDays(60),
-							},
-							{
-								taskId: 'validation',
-								name: 'Validation',
-								date: inDays(70),
-							},
-						];
+						scope.computeTasks = function() {
+							scope.tasks = [
+								{
+									taskId: 'start',
+									name: 'Start',
+									date: scope.start,
+									progress: 0,
+								},
+								{
+									taskId: 'planning',
+									name: 'Planning',
+									date: inDays(scope.start, 14),
+									progress: 0.175,
+								},
+								{
+									taskId: 'concepting',
+									name: 'Concepting',
+									date: inDays(scope.start, 33),
+									progress: 0.4175,
+								},
+								{
+									taskId: 'implementation',
+									name: 'Implementation',
+									date: inDays(scope.start, 70),
+									progress: 0.875,
+								},
+								{
+									taskId: 'validation',
+									name: 'Validation',
+									date: inDays(scope.start, 80),
+									progress: 1,
+								},
+							];
+						};
+						scope.onDeadlineChanged = function(e) {
+							const {taskId, date} = e.detail;
+							const index = scope.tasks.findIndex(task => task.id === taskId);
+							const task = scope.tasks[index];
+							/*
+							scope.tasks = [
+								...scope.tasks.slice(0, index),
+								Object.assign({}, task, {date}),
+								...scope.tasks.slice(0, index + 1),
+							];
+							*/
+						};
+
+						scope.start = inDays(toString(new Date()), -10);
+						scope.computeTasks();
 					</script>
 				</template>
 			</demo-snippet>

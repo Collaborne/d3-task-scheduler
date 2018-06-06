@@ -16,7 +16,6 @@ Custom property                       | Description                             
 `--task-scheduler-footer-color`       | Color of the background of footer                        | `#bfbfbf`
 `--task-scheduler-today-marker-color` | Color of the marker indicating today                     | `#E30B5C`
 `--task-scheduler-dots-color`         | Color of the dots and the line connecting them           | `#71af26`
-`--task-scheduler-grid-color`         | Color of the grid lines                                  | `#d8d8d8`
 `--task-scheduler-axis-color`         | Color of the axis, including axis line, ticks and labels | `#666666`
 `--task-scheduler-font-family`        | Font family for the text parts                           | `sans-serif`
 `--task-scheduler-label-size`         | Font size for graph labels                               | `8px`
@@ -26,7 +25,6 @@ Custom property                       | Description                             
 ```html
 <d3-task-scheduler
 	height="300"
-	start="2018-01-01"
 	deadlines="[[deadlines]]">
 </d3-task-scheduler>
 ```
@@ -76,13 +74,12 @@ Custom property                       | Description                             
 				fill: var(--task-scheduler-axis-color, #666666);
 			}
 			.tooltip {
-				position: absolute;
 				text-align: center;
 				fill: var(--task-scheduler-axis-color, #666666);
 				font-size: var(--task-scheduler-label-size, 10px);
 			}
-			#today {
-				stroke-width: 2;
+			#todayLine {
+				stroke-width: 1;
 				stroke: var(--task-scheduler-today-line-color, #808080);
 			}
 			#valueLine {
@@ -95,6 +92,7 @@ Custom property                       | Description                             
 			.draggable {
 				stroke: #fff;
 				stroke-width: 2;
+				cursor: -webkit-grab;
 			}
 			#area {
 				fill: var(--task-scheduler-area-color, #f6faf6);
@@ -102,30 +100,29 @@ Custom property                       | Description                             
 			.label {
 				fill: var(--task-scheduler-axis-color, #666666);
 				font-size: var(--task-scheduler-label-size, 10px);
+				font-weight: bold;
 			}
-			.grid line {
-				stroke: var(--task-scheduler-grid-color, #d8d8d8);
-				stroke-opacity: 0.7;
-				shape-rendering: crispEdges;
-			}
-			.grid path {
-				stroke-width: 0;
-			}
-			.footer {
+			#footer {
 				fill: var(--task-scheduler-footer-color, #bfbfbf);
 			}
 		</style>
 
 		<div class="svg-container">
 			<svg id="svg" viewBox="0 0 1000 500" preserveAspectRatio="xMinYMin meet" class="svg-content">
-				<rect class="footer"></rect>
+				<rect id="footer" x="0" width="100%"></rect>
 				<g transform$="[[_transform]]">
 					<path id="area"></path>
-					<line id="today"></line>
 					<path id="valueLine"></path>
-					<g class="grid"></g>
 					<g id="xAxis"></g>
 					<g id="yAxis"></g>
+
+					<line id="todayLine"></line>
+					<image
+						id="todayPin"
+						href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4="
+						height="30"
+						width="30"
+					></image>
 				</g>
 			</svg>
 		</div>
@@ -138,13 +135,8 @@ Custom property                       | Description                             
 		 * @polymer
 		 */
 		class D3TaskScheduler extends Polymer.Element {
-
 			static get is() {
 				return 'd3-task-scheduler';
-			}
-
-			constructor() {
-				super();
 			}
 
 			static get properties() {
@@ -152,11 +144,10 @@ Custom property                       | Description                             
 					/**
 					* Array of tasks
 					*/
-					deadlines: Array,
-					/**
-					* String representing the first day of the schedule in the format yyyy-mm-dd
-					*/
-					start: String,
+					deadlines: {
+						type: Array,
+						notify: true,
+					},
 					/**
 					* Component width
 					*/
@@ -183,7 +174,7 @@ Custom property                       | Description                             
 					// Functions to calculate ranges
 					x: {
 						type: Number,
-						computed: '_computeXRange(start, width, margin, _tasks)'
+						computed: '_computeXRange(width, _graphWidth, _tasks)'
 					},
 					y: {
 						type: Number,
@@ -193,6 +184,10 @@ Custom property                       | Description                             
 						type: Number,
 						computed: '_computeGraphHeight(height, margin)'
 					},
+					_graphWidth: {
+						type: Number,
+						computed: '_computeGraphWidth(width, margin)'
+					},
 					_transform: {
 						type: String,
 						computed: '_computeTransform(margin)'
@@ -200,28 +195,42 @@ Custom property                       | Description                             
 
 					_tasks: {
 						type: Array,
-						computed: '_computeTasks(start, deadlines)',
+						computed: '_computeTasks(deadlines)',
 					},
 
-					_initialized: {
-						type: Boolean,
-						value: false,
-					}
+					_parseDate: {
+						type: Function,
+						value: function() { return d3.timeParse('%Y-%m-%d'); },
+					},
+					_formatDate: {
+						type: Function,
+						value: function() { return d3.timeFormat('%Y-%m-%d'); },
+					},
+					_tooltipFormat: {
+						type: Function,
+						value: function() { return d3.timeFormat('%d %B %Y'); },
+					},
+					_todayDateStr: String,
 				};
 			}
 
 			static get observers() {
 				return [
 					'_drawXAxis(x, _graphHeight)',
-					'_drawYAxis(y, _tasks)',
-					'_drawTodayMarker(x, _graphHeight)',
-					'_drawXGridlines(x)',
-					'_drawScatterPlot(x, y, _tasks)',
+					'_drawYAxis(y)',
+					'_positionFooter(_graphHeight, margin)',
+					'_positionTodayMarker(x, _graphHeight, _todayDateStr)',
+					'_drawDots(x, y, _tasks, _todayDateStr)',
 					'_drawLabels(x, y, _tasks)',
-					'_drawValuelinePath(x, y, _tasks)',
-					'_drawColouredArea(x, y, _tasks, _graphHeight)',
-					'_drawColouredFooter(width, _graphHeight, margin)',
+					'_drawValueLine(x, y, _tasks)',
+					'_drawColoredArea(x, y, _tasks, _graphHeight)',
 				];
+			}
+
+			ready() {
+				super.ready();
+
+				this._todayDateStr = this._formatDate(new Date());
 			}
 
 			_computeTransform(margin) {
@@ -236,18 +245,23 @@ Custom property                       | Description                             
 				return height - margin.top - margin.bottom;
 			}
 
-			_computeXRange(start, width, margin, tasks) {
-				if (!start || !width || !margin || this._initialized || !tasks) {
+			_computeXRange(width, graphWidth, tasks) {
+				if (!width || !graphWidth || !tasks) {
 					return;
 				}
 
+				const firstDate = new Date(tasks[0].date);
+				const lastDate = new Date(tasks[tasks.length - 1].date);
+				const projectDuration = lastDate.getTime() - firstDate.getTime();
+				const projectDurationInDays = projectDuration / 1000 / 60 / 60 / 24;
+
+				const border = projectDurationInDays / 5;
+				const minDate = firstDate.setDate(firstDate.getDate() - border);
+				const maxDate = lastDate.setDate(lastDate.getDate() + border);
+
 				return d3.scaleTime()
-					.domain([new Date(start), d3.max(tasks, task => {
-						const date = new Date(task.date);
-						// X edge is the maximum date between today and end of the project plus 1.5 months
-						return new Date(date).setMonth(date.getMonth() + 1.5);
-					})])
-					.range([0, width - margin.left - margin.right]);
+					.domain([minDate, maxDate])
+					.range([0, graphWidth]);
 			}
 
 			_computeYRange(height, margin) {
@@ -261,7 +275,7 @@ Custom property                       | Description                             
 			}
 
 			_drawXAxis(x, graphHeight) {
-				if (!x) {
+				if (!x || !graphHeight) {
 					return;
 				}
 
@@ -274,19 +288,184 @@ Custom property                       | Description                             
 					.call(xAxis);
 			}
 
-			_drawYAxis(y, tasks) {
-				if (!y) {
-					return;
-				}
-
-				const yValues = tasks.map(task => task.percentage);
-				const yAxis = d3.axisLeft(y).tickFormat('').tickValues(yValues).tickSizeInner([-16]);
+			_drawYAxis(y) {
+				const yAxis = d3.axisLeft(y).tickFormat('').tickSizeInner([-16]);
 				d3.select(this.$.yAxis)
 					.attr('class', 'y axis')
 					.call(yAxis);
 			}
 
-			_drawValuelinePath(x, y, tasks) {
+			_computeTasks(deadlines) {
+				return deadlines.map(deadline => {
+					return {
+						name: deadline.name,
+						taskId: deadline.taskId,
+						date: this._parseDate(deadline.date),
+						dateStr: deadline.date,
+						progress: deadline.progress,
+						percentage: 100 * deadline.progress,
+					};
+				});
+			}
+
+			addTooltip(task) {
+				d3.select(this.$.svg).select('g').append('text')
+					.attr('class', 'tooltip')
+					.text(this._tooltipFormat(task.date))
+					.attr('x', this.x(task.date) - 16)
+					// Position tooltip above the dot so that it's readable
+					.attr('y', this.y(task.percentage) + 42);
+			}
+
+			removeTooltip() {
+				d3.select(this.$.svg).select('.tooltip').remove();
+			}
+
+			_updateTooltip(task) {
+				d3.select(this.$.svg).select('.tooltip')
+					.text(this._tooltipFormat(task.date))
+					.attr('x', this.x(task.date));
+			}
+
+			/**
+			 * Draws dots for each task
+			 */
+			_drawDots(x, y, tasks, todayDateStr) {
+				if (!x || !y || !tasks || !todayDateStr) {
+					return;
+				}
+
+				// Define class of the circle as the phase name
+				// plus 'draggable' to apply different styles
+				const computeDotClass = task => {
+					const isDraggable = task.dateStr >= todayDateStr;
+					return `${task.taskId}${isDraggable ? ' draggable' : ''}`;
+				};
+
+				const dots = d3.select(this.$.svg).select('g').selectAll('circle')
+					.data(tasks)
+					.attr('class', computeDotClass)
+					.attr('cx', task => x(task.date))
+					.attr('cy', task => y(task.percentage));
+
+				const drag = d3.drag()
+					.on('drag', this._onDotDragged.bind(this))
+					.on('end', this._onDotDragEnd.bind(this));
+
+				dots.enter().append('circle')
+					.attr('class', computeDotClass)
+					.attr('r', 8)
+					.attr('cx', task => x(task.date))
+					.attr('cy', task => y(task.percentage))
+					.on('mouseover', task => this.addTooltip(task))
+					.on('mouseout', () => this.removeTooltip())
+					.call(drag);
+
+				dots.exit().remove();
+			}
+
+			/**
+			 * Handles if a dot is dragged
+			 */
+			_onDotDragged(task) {
+				const futureDate = this.x.invert(d3.event.x);
+				if (this._canDrag(task, futureDate)) {
+					// Update the date for the dragged task
+					task.date = futureDate;
+
+					this._drawDots(this.x, this.y, this._tasks, this._todayDateStr);
+					this._drawValueLine(this.x, this.y, this._tasks);
+					this._drawLabels(this.x, this.y, this._tasks);
+					this._drawColoredArea(this.x, this.y, this._tasks, this._graphHeight);
+					this._updateTooltip(task);
+				}
+			}
+
+			/**
+			 * Handles if a dot is dragged to final point
+			 */
+			_onDotDragEnd(task) {
+				const futureDate = this.x.invert(d3.event.x);
+				if (this._canDrag(task, futureDate)) {
+					this.deadlines = this.deadlines.map(deadline => {
+						if (deadline.taskId === task.taskId) {
+							return Object.assign({}, deadline, {
+								date: this._formatDate(futureDate),
+							});
+						}
+
+						return deadline;
+					});
+
+					this.dispatchEvent(new CustomEvent('deadline-changed', {
+						detail: {
+							taskId: task.id,
+							date: futureDate,
+						},
+					}));
+				}
+			}
+
+			/**
+			 * Check if the task can be moved to a specific date
+			 */
+			_canDrag(task, futureDate) {
+				const futureDateStr = this._formatDate(futureDate);
+
+				// Dates can only moved forward to today
+				if (futureDateStr < this._todayDateStr) {
+					return false;
+				}
+
+				const index = this._tasks.indexOf(task);
+
+				// Dates can only be moved up to the previous task
+				if (index > 0) {
+					const minDate = this._tasks[index -1].dateStr;
+					if (futureDateStr < minDate) {
+						return false;
+					}
+				}
+
+				// Dates can only be moved up to the next task
+				if (index < this._tasks.length - 1) {
+					const maxDate = this._tasks[index + 1].dateStr;
+					if (futureDateStr > maxDate) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			/**
+			 * Draw labels for each dot
+			 */
+			_drawLabels(x, y, tasks) {
+				if (!x || !y || !tasks) {
+					return;
+				}
+
+				const labels = d3.select(this.$.svg).select('g').selectAll('.label')
+					.data(tasks)
+					.attr('x', task => x(task.date) - 16);
+
+				labels.enter().append('text')
+					.attr('class', 'label')
+					.attr('x', task => x(task.date) - 16)
+					.attr('y', task => y(task.percentage) + 28)
+					.text(task => {
+						const progress = `${Math.round(task.progress * 100)}%`;
+						return `${task.name} (${progress})`;
+					});
+
+				labels.exit().remove();
+			}
+
+			/**
+			 * Positions the line connecting all dots
+			 */
+			_drawValueLine(x, y, tasks) {
 				if (!x || !y) {
 					return;
 				}
@@ -301,7 +480,10 @@ Custom property                       | Description                             
 					.attr('d', valueLine);
 			}
 
-			_drawColouredArea(x, y, tasks, graphHeight) {
+			/**
+			 * Positions the colored area below the tasks line
+			 */
+			_drawColoredArea(x, y, tasks, graphHeight) {
 				if (!x || !y) {
 					return;
 				}
@@ -313,209 +495,37 @@ Custom property                       | Description                             
 				d3.select(this.$.area).attr('d', area(tasks));
 			}
 
-			_computeTasks(start, deadlines) {
-				if (!start || !deadlines) {
+			/**
+			 * Positions the Today pin and line on the x-axis
+			 */
+			_positionTodayMarker(x, graphHeight, todayDateStr) {
+				if (!x || !graphHeight || !todayDateStr) {
 					return;
 				}
 
-				const lastDeadline = deadlines[deadlines.length - 1];
+				const todayDate = this._parseDate(todayDateStr);
 
-				const projectTotalDuration = new Date(lastDeadline.date).getTime() - new Date(start).getTime();
-				const parseDate = d3.timeParse('%Y-%m-%d');
-				const taskDots = deadlines.map(deadline => {
-					// Progress is relative weight of the phase compared to the total project duration
-					const progress = (new Date(deadline.date).getTime() - new Date(start).getTime()) / projectTotalDuration;
-					return {
-						name: deadline.name,
-						taskId: deadline.taskId,
-						date: parseDate(deadline.date),
-						progress,
-						percentage: 100 * progress,
-					};
-				});
-				// Add also one dot representing the start
-				const startDot = {
-					name: 'start',
-					taskId: 'start',
-					date: new Date(start),
-					progress: 0,
-					percentage: 0,
-				};
-
-				return [
-					startDot,
-					...taskDots,
-				];
-			}
-
-			_drawTodayMarker(x, graphHeight) {
-				if (!x || this._initialized) {
-					return;
-				}
-
-				this._initialized = true;
-
-				// Add marker to x axis corresponding to today
-				const todayDate = new Date();
-				// Default dimension for the marker is 30px
-				const imageSize = 30;
-				const children = d3.select(this.$.svg).select('g').selectAll('tod').data([todayDate])
-					.attr('class', 'tod')
-					// Location icon encoded as base64 SVG
-					.attr('xlink:href', 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNG1tIiBoZWlnaHQ9IjI0bW0iIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PHBhdGggZmlsbD0iI2Q4MWI2MCIgZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDljMCA1LjI1IDcgMTMgNyAxM3M3LTcuNzUgNy0xM2MwLTMuODctMy4xMy03LTctN3ptMCA5LjVjLTEuMzggMC0yLjUtMS4xMi0yLjUtMi41czEuMTItMi41IDIuNS0yLjUgMi41IDEuMTIgMi41IDIuNS0xLjEyIDIuNS0yLjUgMi41eiIvPjwvZz48L3N2Zz4=')
-					.attr('height', imageSize)
-					.attr('width', imageSize)
+				const pin = d3.select(this.$.todayPin);
+				pin
+					.data([todayDate])
 					// The center of the pin is at half of its size
-					.attr('x', date => x(date) - (imageSize / 2))
-					.attr('y', graphHeight - imageSize);
+					.attr('x', date => x(date) - (pin.attr('width') / 2))
+					.attr('y', graphHeight - pin.attr('height'));
+
+				d3.select(this.$.todayLine)
+					.data([todayDate])
+					.attr('x1', date => x(date))
+					.attr('x2', date => x(date))
+					.attr('y1', 0)
+					.attr('y2', graphHeight);
 			}
 
-			toTooltipText(date) {
-				const format = d3.timeFormat('%d %B %Y');
-				return `${format(new Date(date))}`;
-			};
-
-			addTooltip(task) {
-				d3.select(this.$.svg).append('text')
-					.attr('class', 'tooltip')
-					.text(this.toTooltipText(task.date))
-					.attr('x', this.x(task.date))
-					// Position tooltip above the dot so that it's readable
-					.attr('y', this.y(task.percentage) + 16);
-			}
-
-			removeTooltip() {
-				d3.select(this.$.svg).selectAll('.tooltip').remove();
-			}
-
-			updateTooltip(task) {
-				d3.select(this.$.svg).select('.tooltip')
-					.text(this.toTooltipText(task.date))
-					.attr('x', this.x(task.date));
-			}
-
-			_isAfter(date1, date2) {
-				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
-				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
-				return dayDate1 > dayDate2;
-			}
-
-			_isEqual(date1, date2) {
-				const dayDate1 = new Date(date1).setHours(0, 0, 0, 0);
-				const dayDate2 = new Date(date2).setHours(0, 0, 0, 0);
-				return dayDate1 === dayDate2;
-			}
-
-			_drawScatterPlot(x, y, tasks) {
-				if (!x || !y || !tasks) {
-					return;
-				}
-				const dragged = task => {
-					const todayDate = new Date();
-
-					const index = tasks.indexOf(task);
-					// Dates can only be moved between the surrounding dots
-					let minDate;
-					if (index > 0) {
-						minDate = tasks[index -1].date;
-					} else {
-						minDate = this.start;
-					}
-
-					let maxDate;
-					if (index < tasks.length - 1) {
-						// Only allow moving until the next task
-						maxDate = tasks[index + 1].date;
-					} else {
-						// Allow post-poning deadlines only after today
-						// and not after the graph X edge
-						const endMonth = new Date(this.end).getMonth();
-						maxDate = new Date(this.end).setMonth(endMonth + 1.5);
-					}
-
-					// Check date which the dot has been dragged to
-					const futureDate = this.x.invert(d3.event.x);
-					if ((this._isEqual(futureDate, todayDate) || this._isAfter(futureDate, todayDate)) && this._isAfter(futureDate, minDate) && this._isAfter(maxDate, futureDate)) {
-						// Update the date for the dragged task
-						task.date = futureDate;
-						// Move the current dot
-						d3.select(this.$.svg)
-							.select(`.${task.taskId}`)
-							.attr('cx', this.x(task.date));
-
-						// Redraw line connecting dots
-						this._drawValuelinePath(x, y, tasks);
-
-						// Redraw dot labels
-						this._updateLabels();
-
-						// Redraw coloured area below value line
-						this._drawColouredArea(this.x, this.y, tasks, this._graphHeight);
-
-						// Update tooltip when the dot is dragged
-						this.updateTooltip(task);
-					}
-				};
-
-				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(tasks)
-					.enter().append('circle')
-					// Define class of the circle as the phase name
-					// plus 'draggable' to apply different styles
-					.attr('class', task => {
-						const todayDate = new Date();
-						if (this._isAfter(task.date, todayDate)) {
-							return `${task.taskId} draggable`;
-						}
-						return task.taskId;
-					})
-					.attr('r', 8)
-					.attr('cx', task => x(task.date))
-					.attr('cy', task => y(task.percentage))
-					.on('mouseover', task => this.addTooltip(task))
-					.on('mouseout', () => this.removeTooltip())
-					.call(d3.drag().on('drag', dragged));
-			}
-
-			_drawLabels(x, y, tasks) {
-				if (!x || !y || !tasks) {
-					return;
-				}
-				d3.select(this.$.svg).select('g').selectAll('dot')
-					.data(tasks)
-					.enter().append('text')
-					.attr('class', 'label')
-					.attr('x', task => x(task.date))
-					.attr('y', task => y(task.percentage) + 32)
-					.append('tspan')
-					.attr('dy', 0)
-					.attr('x', task => x(task.date) - 16)
-					.text(task => task.name)
-					.append('tspan')
-					// Offset by 1.2 em
-					.attr('dy', '1.2em')
-					.attr('x', task => x(task.date) - 16)
-					.text(task => `${Math.round(task.progress * 100)}% progress`);
-			}
-
-			_updateLabels() {
-				d3.select(this.$.svg).select('g').selectAll('text.label tspan')
-					.attr('x', task => this.x(task.date) - 16);
-			}
-
-			_drawXGridlines(x) {
-				d3.select(this.$.svg).selectAll('.grid')
-					.call(d3.axisBottom(x)
-						.ticks(d3.timeMonth)
-						.tickFormat('')
-					);
-			}
-
-			_drawColouredFooter(width, graphHeight, margin) {
-				d3.select(this.$.svg).select('.footer')
-						.attr('x', 0)
+			/**
+			 * Positions the gray footer
+			 */
+			_positionFooter(graphHeight, margin) {
+				d3.select(this.$.footer)
 						.attr('y', graphHeight + margin.top)
-						.attr('width', width)
 						.attr('height', margin.bottom);
 			}
 		}
