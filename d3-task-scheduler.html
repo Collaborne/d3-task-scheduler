@@ -399,8 +399,8 @@ Custom property                       | Description                             
 
 				this.dispatchEvent(new CustomEvent('deadline-changed', {
 					detail: {
-						taskId: task.id,
-						date: futureDate,
+						taskId: task.taskId,
+						date: task.date,
 					},
 				}));
 			}

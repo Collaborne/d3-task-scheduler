@@ -83,15 +83,7 @@
 						};
 						scope.onDeadlineChanged = function(e) {
 							const {taskId, date} = e.detail;
-							const index = scope.tasks.findIndex(task => task.id === taskId);
-							const task = scope.tasks[index];
-							/*
-							scope.tasks = [
-								...scope.tasks.slice(0, index),
-								Object.assign({}, task, {date}),
-								...scope.tasks.slice(0, index + 1),
-							];
-							*/
+							console.log(`Task ${taskId} was moved to ${date}`);
 						};
 
 						scope.start = inDays(toString(new Date()), -10);
