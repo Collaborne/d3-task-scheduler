@@ -1,6 +1,8 @@
 d3-task-scheduler
 [![Build Status](https://travis-ci.org/Collaborne/d3-task-scheduler.svg?branch=master)](https://travis-ci.org/Collaborne/d3-task-scheduler)
-[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/collaborne/d3-task-scheduler)
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/collaborne/d3-task-scheduler)  
+[![Published on Vaadin  Directory](https://img.shields.io/badge/Vaadin%20Directory-published-00b4f0.svg)](https://vaadin.com/directory/component/Collaborned3-task-scheduler)
+[![Stars on vaadin.com/directory](https://img.shields.io/vaadin-directory/star/Collaborned3-task-scheduler.svg)](https://vaadin.com/directory/component/Collaborned3-task-scheduler)
 =================
 
 `d3-task-scheduler` is a chart that shows tasks as draggable dots. It accepts as input a schedule as it's modeled by the [tasks-scheduler](https://github.com/Collaborne/tasks-scheduler). The web component is built with [Polymer 2.x](https://www.polymer-project.org) and [D3 v.4](http://d3js.org).
