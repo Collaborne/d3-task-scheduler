@@ -9,7 +9,7 @@ d3-task-scheduler
 
 To use this element:
 
-`bower install Collaborne/d3-task-scheduler`
+`npm install collaborne-d3-task-scheduler`
 
 <!--
 ```
@@ -22,6 +22,7 @@ To use this element:
 ```
 -->
 ```html
+<script src="d3/dist/d3.min.js"></script>
 <d3-task-scheduler
     height="300"
     start="2018-04-10"
