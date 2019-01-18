@@ -8,7 +8,7 @@
     "scheduler",
     "task-planner"
   ],
-  "name": "@polymer/d3-task-scheduler",
+  "name": "collaborne-d3-task-scheduler",
   "version": "1.0.0",
   "resolutions": {
     "inherits": "2.0.3",
