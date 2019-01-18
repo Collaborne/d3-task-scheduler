@@ -9,7 +9,7 @@
     "task-planner"
   ],
   "name": "@polymer/d3-task-scheduler",
-  "version": "0.5.4",
+  "version": "1.0.0",
   "resolutions": {
     "inherits": "2.0.3",
     "samsam": "1.1.3",
