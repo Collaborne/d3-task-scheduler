@@ -1,10 +1,13 @@
 <html>
 	<head>
-		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-		<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-		<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-		<link rel="import" href="../../paper-styles/demo-pages.html">
-		<link rel="import" href="../d3-task-scheduler.html">
+		<script src="../node_modules/d3/dist/d3.min.js"></script>
+
+		<script type="module">
+			import '@webcomponents/webcomponentsjs/webcomponents-loader.js';
+			import '@polymer/iron-demo-helpers/demo-pages-shared-styles.js';
+			import '@polymer/iron-demo-helpers/demo-snippet.js';
+			import '../d3-task-scheduler.js';
+		</script>
 
 		<script>
 			function toString(date) {
@@ -22,75 +25,73 @@
 	</head>
 
 	<body>
-		<div class="vertical-section-container">
-			<h2>Task scheduler</h2>
-			<demo-snippet>
-				<template>
-					<dom-bind>
-						<template>
-							<style>
-								d3-task-scheduler {
-									width: 100%;
-								}
-							</style>
+		<h2>Task scheduler</h2>
+		<demo-snippet>
+			<template>
+				<dom-bind>
+					<template>
+						<style>
+							d3-task-scheduler {
+								width: 100%;
+							}
+						</style>
 
-							Start: <input value="{{start::input}}" type="date"/><input type="submit" on-tap="computeTasks"/>
-							<d3-task-scheduler
-								deadlines="{{tasks}}"
-								on-deadline-changed="onDeadlineChanged"
-							></d3-task-scheduler>
-							<template is="dom-repeat" items="[[tasks]]" as="task">
-								[[task.name]] - [[task.date]]<br>
-							</template>
+						Start: <input value="{{start::input}}" type="date"/><input type="submit" on-tap="computeTasks"/>
+						<d3-task-scheduler
+							deadlines="{{tasks}}"
+							on-deadline-changed="onDeadlineChanged"
+						></d3-task-scheduler>
+						<template is="dom-repeat" items="[[tasks]]" as="task">
+							[[task.name]] - [[task.date]]<br>
 						</template>
-					</dom-bind>
+					</template>
+				</dom-bind>
 
-					<script>
-						const scope = document.querySelector('dom-bind');
-						scope.computeTasks = function() {
-							scope.tasks = [
-								{
-									taskId: 'start',
-									name: 'Start',
-									date: scope.start,
-									progress: 0,
-								},
-								{
-									taskId: 'planning',
-									name: 'Planning',
-									date: inDays(scope.start, 14),
-									progress: 0.175,
-								},
-								{
-									taskId: 'concepting',
-									name: 'Concepting',
-									date: inDays(scope.start, 33),
-									progress: 0.4175,
-								},
-								{
-									taskId: 'implementation',
-									name: 'Implementation',
-									date: inDays(scope.start, 70),
-									progress: 0.875,
-								},
-								{
-									taskId: 'validation',
-									name: 'Validation',
-									date: inDays(scope.start, 80),
-									progress: 1,
-								},
-							];
-						};
-						scope.onDeadlineChanged = function(e) {
-							const {taskId, date} = e.detail;
-							console.log(`Task ${taskId} was moved to ${date}`);
-						};
+				<script>
+					const scope = document.querySelector('dom-bind');
+					scope.computeTasks = function() {
+						scope.tasks = [
+						{
+							taskId: 'start',
+							name: 'Start',
+							date: scope.start,
+							progress: 0,
+						},
+						{
+							taskId: 'planning',
+							name: 'Planning',
+							date: inDays(scope.start, 14),
+							progress: 0.175,
+						},
+						{
+							taskId: 'concepting',
+							name: 'Concepting',
+							date: inDays(scope.start, 33),
+							progress: 0.4175,
+						},
+						{
+							taskId: 'implementation',
+							name: 'Implementation',
+							date: inDays(scope.start, 70),
+							progress: 0.875,
+						},
+						{
+							taskId: 'validation',
+							name: 'Validation',
+							date: inDays(scope.start, 80),
+							progress: 1,
+						},
+						];
+					};
+					scope.onDeadlineChanged = function(e) {
+						const {taskId, date} = e.detail;
+						console.log(`Task ${taskId} was moved to ${date}`);
+					};
 
-						scope.start = inDays(toString(new Date()), -10);
-						scope.computeTasks();
-					</script>
-				</template>
-			</demo-snippet>
-		</div>
+					scope.start = inDays(toString(new Date()), -10);
+					scope.computeTasks();
+				</script>
+			</template>
+		</demo-snippet>
 	</body>
 </html>
