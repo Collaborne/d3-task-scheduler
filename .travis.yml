@@ -1,18 +1,19 @@
 dist: trusty
 group: beta
-
 language: node_js
 node_js:
 - node
-addons:
-  firefox: latest-esr
 cache:
   directories:
   - node_modules
 before_install:
-- "if [ -d node_modules ] && [ x$(cat node_modules/.last-node-version 2>/dev/null) != x$(node -e 'console.log(process.version)') ]; then npm rebuild --update-binary && node -e 'console.log(process.version)' > node_modules/.last-node-version; fi"
-before_script:
-- npm install polymer-cli
-- $(npm bin)/polymer lint --rules polymer-3
-script:
-- echo "No tests configured"
+- if [ -d node_modules ] && [ x$(cat node_modules/.last-node-version 2>/dev/null) != x$(node -e 'console.log(process.version)') ]; then npm rebuild --update-binary && node -e 'console.log(process.version)' > node_modules/.last-node-version; fi
+deploy:
+  skip_cleanup: true
+  provider: npm
+  email: npm@collaborne.com
+  api_key:
+    secure: "0Mt2+CQAJRzy74Vqz7ulHwyHCKKu0G9nFJTQyVUNYzcT+x+J7X1J84YD6eSrwP+sfpY6/1okAKSUftuIapvLLfcYCeFNkg7qlY8snU2BWa7PU70xh/zSlDKfbCP8PNSecoYiCw3d1Gs09pWiXJBvzHQArSSlnMMxEjkxImjkRQ6LMwSZCkVNjrpjOQGMhWhUu/Nxngbir6WOEVLKihfMJdc8eQB9L100EmNeORVvSO08qpmS8irGbCj57RTbX5DoW/o9lxtWUlkUb8VdoH+ZmCtVqWXYj4iPCjFtme+vmFWiqSRcwOufL+77KONHrsA+RMpjhEqR/dN5MHiaDDgPWGBAzTbRDcmCK60ZbrXb9U0XhMMA8GRadgChM7IrR+m26RpP+PDCIkSMfLpxWbjDHCmUvgqYhiqwxmcAYkkaRIyiLPHtY70EZszGE+Al8QPAGsy021GePyRUADhnGrl4kGEw783PbHn4+5Kj/VGyxlSbrc3LVULkTH7L8pcVSNCHCappP+vUuIzpqvrGeI20T6beWy8oT+yJ0ORAPpQPdS44DG278EFFJGM7CI/7tPS56pJfwCA1he1yGBjOFC+u7+pBpTwoCySxAsHFN7dV7dzZOtd/tS/dvMgzTuNzOYy06TrgkwX9i4Frtayoph0vv7CXlHijGYLjaG3ekgRwcA0="
+  on:
+    tags: true
+    condition: $(node -e 'console.log("v" + require("./package.json").version)') = ${TRAVIS_TAG}

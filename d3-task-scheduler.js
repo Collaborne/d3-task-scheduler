@@ -1,4 +1,4 @@
-import { PolymerElement, html } from '@polymer/polymer/polymer-element.js';
+import {PolymerElement, html} from '@polymer/polymer/polymer-element.js';
 
 /**
 A chart that shows tasks as draggable dots
@@ -129,20 +129,53 @@ class D3TaskScheduler extends PolymerElement {
 
 	static get properties() {
 		return {
+
+			_formatDate: {
+				type: Function,
+				value: () => window.d3.timeFormat('%Y-%m-%d'),
+			},
+
+			_graphHeight: {
+				computed: '_computeGraphHeight(height, margin)',
+				type: Number,
+			},
+
+			_graphWidth: {
+				computed: '_computeGraphWidth(width, margin)',
+				type: Number,
+			},
+
+			_parseDate: {
+				type: Function,
+				value: () => window.d3.timeParse('%Y-%m-%d'),
+
+			},
+
+			_tasks: {
+				computed: '_computeTasks(deadlines)',
+				type: Array,
+			},
+
+			_todayDateStr: String,
+
+			_tooltipFormat: {
+				type: Function,
+				value: () => window.d3.timeFormat('%d %B %Y'),
+			},
+
+			_transform: {
+				computed: '_computeTransform(margin)',
+				type: String,
+			},
+
 			/**
 			* Array of tasks
 			*/
 			deadlines: {
-				type: Array,
 				notify: true,
+				type: Array,
 			},
-			/**
-			* Component width
-			*/
-			width: {
-				type: Number,
-				value: 1000,
-			},
+
 			/**
 			* Component height
 			*/
@@ -150,55 +183,35 @@ class D3TaskScheduler extends PolymerElement {
 				type: Number,
 				value: 500,
 			},
+
 			margin: {
 				type: Object,
 				value: {
-					top: 30,
-					right: 50,
 					bottom: 50,
-					left: 50
-				}
+					left: 50,
+					right: 50,
+					top: 30,
+				},
 			},
+
+			/**
+			* Component width
+			*/
+			width: {
+				type: Number,
+				value: 1000,
+			},
+
 			// Functions to calculate ranges
 			x: {
+				computed: '_computeXRange(width, _graphWidth, _tasks)',
 				type: Number,
-				computed: '_computeXRange(width, _graphWidth, _tasks)'
 			},
+
 			y: {
+				computed: '_computeYRange(height, margin)',
 				type: Number,
-				computed: '_computeYRange(height, margin)'
 			},
-			_graphHeight: {
-				type: Number,
-				computed: '_computeGraphHeight(height, margin)'
-			},
-			_graphWidth: {
-				type: Number,
-				computed: '_computeGraphWidth(width, margin)'
-			},
-			_transform: {
-				type: String,
-				computed: '_computeTransform(margin)'
-			},
-
-			_tasks: {
-				type: Array,
-				computed: '_computeTasks(deadlines)',
-			},
-
-			_parseDate: {
-				type: Function,
-				value: function() { return d3.timeParse('%Y-%m-%d'); },
-			},
-			_formatDate: {
-				type: Function,
-				value: function() { return d3.timeFormat('%Y-%m-%d'); },
-			},
-			_tooltipFormat: {
-				type: Function,
-				value: function() { return d3.timeFormat('%d %B %Y'); },
-			},
-			_todayDateStr: String,
 		};
 	}
 
@@ -235,7 +248,7 @@ class D3TaskScheduler extends PolymerElement {
 
 	_computeXRange(width, graphWidth, tasks) {
 		if (!width || !graphWidth || !tasks) {
-			return;
+			return undefined;
 		}
 
 		const firstDate = new Date(tasks[0].date);
@@ -247,17 +260,17 @@ class D3TaskScheduler extends PolymerElement {
 		const minDate = firstDate.setDate(firstDate.getDate() - border);
 		const maxDate = lastDate.setDate(lastDate.getDate() + border);
 
-		return d3.scaleTime()
+		return window.d3.scaleTime()
 			.domain([minDate, maxDate])
 			.range([0, graphWidth]);
 	}
 
 	_computeYRange(height, margin) {
 		if (!height || !margin) {
-			return;
+			return undefined;
 		}
 
-		return d3.scaleLinear()
+		return window.d3.scaleLinear()
 			.domain([0, 100])
 			.range([height - margin.top - margin.bottom, 0]);
 	}
@@ -267,8 +280,8 @@ class D3TaskScheduler extends PolymerElement {
 			return;
 		}
 
-		const xAxis = d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat('%B'));
-		d3.select(this.$.xAxis)
+		const xAxis = window.d3.axisBottom(x).ticks(window.d3.timeMonth).tickFormat(window.d3.timeFormat('%B'));
+		window.d3.select(this.$.xAxis)
 			.attr('class', 'x axis')
 			// By default x axis is on the upperside
 			// so we need to move it down by the graph height
@@ -277,8 +290,8 @@ class D3TaskScheduler extends PolymerElement {
 	}
 
 	_drawYAxis(y) {
-		const yAxis = d3.axisLeft(y).tickFormat('').tickSizeInner([-16]);
-		d3.select(this.$.yAxis)
+		const yAxis = window.d3.axisLeft(y).tickFormat('').tickSizeInner([-16]);
+		window.d3.select(this.$.yAxis)
 			.attr('class', 'y axis')
 			.call(yAxis);
 	}
@@ -286,18 +299,18 @@ class D3TaskScheduler extends PolymerElement {
 	_computeTasks(deadlines) {
 		return deadlines.map(deadline => {
 			return {
-				name: deadline.name,
-				taskId: deadline.taskId,
 				date: this._parseDate(deadline.date),
 				dateStr: deadline.date,
-				progress: deadline.progress,
+				name: deadline.name,
 				percentage: 100 * deadline.progress,
+				progress: deadline.progress,
+				taskId: deadline.taskId,
 			};
 		});
 	}
 
 	addTooltip(task) {
-		d3.select(this.$.svg).select('g').append('text')
+		window.d3.select(this.$.svg).select('g').append('text')
 			.attr('class', 'tooltip')
 			.text(this._tooltipFormat(task.date))
 			.attr('x', this.x(task.date) - 16)
@@ -306,18 +319,16 @@ class D3TaskScheduler extends PolymerElement {
 	}
 
 	removeTooltip() {
-		d3.select(this.$.svg).select('.tooltip').remove();
+		window.d3.select(this.$.svg).select('.tooltip').remove();
 	}
 
 	_updateTooltip(task) {
-		d3.select(this.$.svg).select('.tooltip')
+		window.d3.select(this.$.svg).select('.tooltip')
 			.text(this._tooltipFormat(task.date))
 			.attr('x', this.x(task.date));
 	}
 
-	/**
-	 * Draws dots for each task
-	 */
+	// Draws dots for each task
 	_drawDots(x, y, tasks, todayDateStr) {
 		if (!x || !y || !tasks || !todayDateStr) {
 			return;
@@ -330,13 +341,13 @@ class D3TaskScheduler extends PolymerElement {
 			return `${task.taskId}${isDraggable ? ' draggable' : ''}`;
 		};
 
-		const dots = d3.select(this.$.svg).select('g').selectAll('circle')
+		const dots = window.d3.select(this.$.svg).select('g').selectAll('circle')
 			.data(tasks)
 			.attr('class', computeDotClass)
 			.attr('cx', task => x(task.date))
 			.attr('cy', task => y(task.percentage));
 
-		const drag = d3.drag()
+		const drag = window.d3.drag()
 			.on('drag', this._onDotDragged.bind(this))
 			.on('end', this._onDotDragEnd.bind(this));
 
@@ -352,11 +363,9 @@ class D3TaskScheduler extends PolymerElement {
 		dots.exit().remove();
 	}
 
-	/**
-	 * Handles if a dot is dragged
-	 */
+	// Handles if a dot is dragged
 	_onDotDragged(task) {
-		const futureDate = this.x.invert(d3.event.x);
+		const futureDate = this.x.invert(window.d3.event.x);
 		if (this._canDrag(task, futureDate)) {
 			// Update the date for the dragged task
 			task.date = futureDate;
@@ -369,9 +378,7 @@ class D3TaskScheduler extends PolymerElement {
 		}
 	}
 
-	/**
-	 * Handles if a dot is dragged to final point
-	 */
+	// Handles if a dot is dragged to final point
 	_onDotDragEnd(task) {
 		this.deadlines = this.deadlines.map(deadline => {
 			if (deadline.taskId === task.taskId) {
@@ -386,15 +393,13 @@ class D3TaskScheduler extends PolymerElement {
 
 		this.dispatchEvent(new CustomEvent('deadline-changed', {
 			detail: {
-				taskId: task.taskId,
 				date: task.date,
+				taskId: task.taskId,
 			},
 		}));
 	}
 
-	/**
-	 * Check if the task can be moved to a specific date
-	 */
+	// Check if the task can be moved to a specific date
 	_canDrag(task, futureDate) {
 		const futureDateStr = this._formatDate(futureDate);
 
@@ -407,7 +412,7 @@ class D3TaskScheduler extends PolymerElement {
 
 		// Dates can only be moved up to the previous task
 		if (index > 0) {
-			const minDate = this._tasks[index -1].dateStr;
+			const minDate = this._tasks[index - 1].dateStr;
 			if (futureDateStr < minDate) {
 				return false;
 			}
@@ -424,9 +429,7 @@ class D3TaskScheduler extends PolymerElement {
 		return true;
 	}
 
-	/**
-	 * Draw labels for each dot
-	 */
+	// Draw labels for each dot
 	_drawLabels(x, y, tasks) {
 		if (!x || !y || !tasks) {
 			return;
@@ -437,7 +440,7 @@ class D3TaskScheduler extends PolymerElement {
 			return `${task.name} (${progress})`;
 		};
 
-		const labels = d3.select(this.$.svg).select('g').selectAll('.label')
+		const labels = window.d3.select(this.$.svg).select('g').selectAll('.label')
 			.data(tasks)
 			.attr('x', task => x(task.date) - 16)
 			.text(toLabelText);
@@ -451,42 +454,35 @@ class D3TaskScheduler extends PolymerElement {
 		labels.exit().remove();
 	}
 
-	/**
-	 * Positions the line connecting all dots
-	 */
+	// Positions the line connecting all dots
 	_drawValueLine(x, y, tasks) {
 		if (!x || !y) {
 			return;
 		}
 
-		const valueLine = d3.line()
+		const valueLine = window.d3.line()
 			.x(task => x(task.date))
-			.y(task => y(task.percentage))
-			(tasks);
+			.y(task => y(task.percentage))(tasks);
 
-		d3.select(this.$.valueLine)
+		window.d3.select(this.$.valueLine)
 			.attr('class', 'line')
 			.attr('d', valueLine);
 	}
 
-	/**
-	 * Positions the colored area below the tasks line
-	 */
+	// Positions the colored area below the tasks line
 	_drawColoredArea(x, y, tasks, graphHeight) {
 		if (!x || !y) {
 			return;
 		}
 
-		const area = d3.area()
+		const area = window.d3.area()
 			.x(task => x(task.date))
 			.y0(graphHeight)
 			.y1(task => y(task.percentage));
-		d3.select(this.$.area).attr('d', area(tasks));
+		window.d3.select(this.$.area).attr('d', area(tasks));
 	}
 
-	/**
-	 * Positions the Today pin and line on the x-axis
-	 */
+	// Positions the Today pin and line on the x-axis
 	_positionTodayMarker(x, graphHeight, todayDateStr) {
 		if (!x || !graphHeight || !todayDateStr) {
 			return;
@@ -494,14 +490,17 @@ class D3TaskScheduler extends PolymerElement {
 
 		const todayDate = this._parseDate(todayDateStr);
 
-		const pin = d3.select(this.$.todayPin);
+		const pin = window.d3.select(this.$.todayPin);
 		pin
 			.data([todayDate])
 			// The center of the pin is at half of its size
-			.attr('x', date => x(date) - (pin.attr('width') / 2))
+			.attr('x', date => {
+				const widthOffset = pin.attr('width') / 2;
+				return x(date) - widthOffset;
+			})
 			.attr('y', graphHeight - pin.attr('height'));
 
-		d3.select(this.$.todayLine)
+		window.d3.select(this.$.todayLine)
 			.data([todayDate])
 			.attr('x1', date => x(date))
 			.attr('x2', date => x(date))
@@ -509,13 +508,11 @@ class D3TaskScheduler extends PolymerElement {
 			.attr('y2', graphHeight);
 	}
 
-	/**
-	 * Positions the gray footer
-	 */
+	// Positions the gray footer
 	_positionFooter(graphHeight, margin) {
-		d3.select(this.$.footer)
-				.attr('y', graphHeight + margin.top)
-				.attr('height', margin.bottom);
+		window.d3.select(this.$.footer)
+			.attr('y', graphHeight + margin.top)
+			.attr('height', margin.bottom);
 	}
 }
 customElements.define(D3TaskScheduler.is, D3TaskScheduler);

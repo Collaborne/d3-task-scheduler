@@ -9,18 +9,8 @@ d3-task-scheduler
 
 To use this element:
 
-`npm install collaborne-d3-task-scheduler`
+`npm install collaborne-d3-task-scheduler --save`
 
-<!--
-```
-<custom-element-demo>
-  <template>
-    <link rel="import" href="d3-task-scheduler.html">
-    <next-code-block></next-code-block>
-  </template>
-</custom-element-demo>
-```
--->
 ```html
 <script src="d3/dist/d3.min.js"></script>
 <d3-task-scheduler
