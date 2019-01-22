@@ -9,7 +9,7 @@
     "task-planner"
   ],
   "name": "collaborne-d3-task-scheduler",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "d3-task-scheduler.js",
   "author": "Collaborne B.V.",
   "license": "Apache-2.0",
