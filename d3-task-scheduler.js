@@ -403,11 +403,6 @@ class D3TaskScheduler extends PolymerElement {
 	_canDrag(task, futureDate) {
 		const futureDateStr = this._formatDate(futureDate);
 
-		// Dates can only moved forward to today
-		if (futureDateStr < this._todayDateStr) {
-			return false;
-		}
-
 		const index = this._tasks.indexOf(task);
 
 		// Dates can only be moved up to the previous task
