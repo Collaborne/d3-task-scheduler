@@ -247,7 +247,7 @@ class D3TaskScheduler extends PolymerElement {
 	}
 
 	_computeXRange(width, graphWidth, tasks) {
-		if (!width || !graphWidth || !tasks) {
+		if (!width || !graphWidth || !tasks || tasks.length === 0) {
 			return undefined;
 		}
 
